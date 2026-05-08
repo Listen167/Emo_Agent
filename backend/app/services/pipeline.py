@@ -9,7 +9,11 @@ from sqlalchemy import select, desc
 from app.core.config import settings
 from app.models.message import ChatMessage
 from app.schemas.chat import ChatResponse, EmotionResult, HistoryItem
-from ai_engine import asr, emotion, fusion, llm, tts
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent.parent))
+
+from ai import asr, emotion, fusion, llm, tts
 
 _meme_pool = []
 def load_memes():
@@ -47,7 +51,7 @@ async def process_chat(
 
     tts_path = None
     if reply.strip():
-        asyncio.create_task(_run_tts_async(reply, sid, fused["label"]))
+        tts_path = await asyncio.to_thread(tts.synthesize, reply, sid, fused["label"])
 
     user_msg = ChatMessage(
         session_id=sid, role="user", content_type="audio" if audio_path else "text",
@@ -57,14 +61,8 @@ async def process_chat(
     db.add_all([user_msg, ai_msg])
     await db.commit()
 
-    return ChatResponse(session_id=sid, text=reply, emotion=fused, tts_audio_url=None)
-
-async def _run_tts_async(text: str, sid: str, emo: str):
-    try:
-        path = await asyncio.to_thread(tts.synthesize, text, sid, emo)
-        # 生产环境应通过 WebSocket 或轮询通知前端更新路径，此处简化
-    except Exception as e:
-        print(f"[TTS Async Error] {e}")
+    tts_audio_url = f"/data/tts/{session_id}_{len(reply)}.wav" if tts_path else None
+    return ChatResponse(session_id=sid, text=reply, user_text=final_text, emotion=fused, tts_audio_url=tts_audio_url)
 
 async def get_history(session_id: str, db: AsyncSession) -> list[HistoryItem]:
     result = await db.execute(

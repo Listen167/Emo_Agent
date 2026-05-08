@@ -12,6 +12,7 @@ class ChatResponse(BaseModel):
     session_id: str
     role: str = "assistant"
     text: str
+    user_text: str = ""
     emotion: EmotionResult
     tts_audio_url: Optional[str] = None
 

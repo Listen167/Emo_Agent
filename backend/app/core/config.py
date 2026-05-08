@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./data/chat.db"
     LLM_BASE_URL: str = "http://localhost:8080/v1"
     LLM_API_KEY: str = "empty"
-    LLM_MODEL: str = "Qwen/Qwen2.5-7B-Instruct-AWQ"
+    LLM_MODEL: str = "deepseek-chat"
     AUDIO_EMOTION_WEIGHT: float = 0.65
     TTS_VOICE: str = "zh-CN-YunxiNeural"
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]

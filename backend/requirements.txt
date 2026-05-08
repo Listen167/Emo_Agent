@@ -4,9 +4,12 @@ sqlalchemy==2.0.35
 aiosqlite==0.20.0
 pydantic-settings==2.5.2
 python-multipart==0.0.12
-openai==1.51.2
+openai>=1.58.0
 numpy==1.26.4
 edge-tts==6.1.12
 transformers==4.45.2
 torch==2.4.1+cu121
 accelerate==0.34.2
+librosa==0.10.2
+datasets==3.1.0
+torchaudio==2.4.1

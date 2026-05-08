@@ -1,8 +1,9 @@
+from pathlib import Path
 from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db, init_db
 from app.services.pipeline import process_chat, get_history
-from app.schemas.chat import ChatResponse
+from app.schemas.chat import ChatResponse, HistoryItem
 from app.core.config import settings
 
 router = APIRouter(prefix="/api/chat", tags=["对话"])

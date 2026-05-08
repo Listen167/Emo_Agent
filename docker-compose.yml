@@ -4,15 +4,15 @@ services:
     image: vllm/vllm-openai:latest
     runtime: nvidia
     environment:
-      - HUGGING_FACE_HUB_TOKEN= # 可选，若模型需登录
+      - HUGGING_FACE_HUB_TOKEN=
     volumes:
       - ./models_cache:/root/.cache/huggingface
     ports:
       - "8080:8000"
     command: >
-      --model Qwen/Qwen2.5-7B-Instruct-AWQ
-      --max-model-len 4096
-      --gpu-memory-utilization 0.65
+      --model Qwen/Qwen2.5-1.8B-Instruct-AWQ
+      --max-model-len 2048
+      --gpu-memory-utilization 0.8
       --port 8000
       --api-key empty
       --disable-log-requests
