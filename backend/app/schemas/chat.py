@@ -1,12 +1,15 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+
 
 class EmotionResult(BaseModel):
     label: str
     confidence: float
     audio_weight: float
     text_weight: float
+
 
 class ChatResponse(BaseModel):
     session_id: str
@@ -15,13 +18,16 @@ class ChatResponse(BaseModel):
     user_text: str = ""
     emotion: EmotionResult
     tts_audio_url: Optional[str] = None
+    user_created_at: datetime
+    assistant_created_at: datetime
+
 
 class HistoryItem(BaseModel):
     id: int
     role: str
+    content_type: str
     content: str
     emotion_label: Optional[str]
+    emotion_conf: Optional[float] = None
+    tts_audio_url: Optional[str] = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
