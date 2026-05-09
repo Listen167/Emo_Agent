@@ -1,0 +1,11 @@
+{
+  "extraPaths": ["backend"],
+  "typeCheckingMode": "basic",
+  "reportUnknownMemberType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownParameterType": "none",
+  "reportMissingTypeStubs": false,
+  "reportUnusedImport": "warning",
+  "reportUnusedVariable": "warning"
+}
