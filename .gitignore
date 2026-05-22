@@ -1,7 +1,11 @@
-.env
 *.env
+.env.*
+!.env.example
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
 node_modules/
 dist/
 data/
@@ -14,7 +18,12 @@ models_cache/
 backend/data/
 frontend/dist/
 frontend/node_modules/
-models/
+/models/
 .venv/
 venv/
 .pytest_cache/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
