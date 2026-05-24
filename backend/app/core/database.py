@@ -26,7 +26,14 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         if url.startswith("sqlite+"):
-            columns = await conn.execute(text("PRAGMA table_info(knowledge_chunks)"))
-            column_names = {row[1] for row in columns.fetchall()}
-            if "embedding" not in column_names:
+            knowledge_columns = await conn.execute(text("PRAGMA table_info(knowledge_chunks)"))
+            knowledge_column_names = {row[1] for row in knowledge_columns.fetchall()}
+            if "embedding" not in knowledge_column_names:
                 await conn.execute(text("ALTER TABLE knowledge_chunks ADD COLUMN embedding TEXT"))
+
+            life_columns = await conn.execute(text("PRAGMA table_info(life_records)"))
+            life_column_names = {row[1] for row in life_columns.fetchall()}
+            if "location" not in life_column_names:
+                await conn.execute(text("ALTER TABLE life_records ADD COLUMN location VARCHAR(120)"))
+            if "tags" not in life_column_names:
+                await conn.execute(text("ALTER TABLE life_records ADD COLUMN tags TEXT"))

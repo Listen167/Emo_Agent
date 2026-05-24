@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     DATA_DIR: Path = DATA_DIR
     UPLOAD_DIR: Path = DATA_DIR / "uploads"
     TTS_DIR: Path = DATA_DIR / "tts"
+    MEDIA_DIR: Path = DATA_DIR / "media"
     MEME_PATH: Path = DATA_DIR / "memes.json"
     DATABASE_URL: str = f"sqlite+aiosqlite:///{(DATA_DIR / 'chat.db').as_posix()}"
     LLM_BASE_URL: str = "http://localhost:8080/v1"

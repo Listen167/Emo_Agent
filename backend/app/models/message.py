@@ -44,6 +44,8 @@ class LifeRecord(Base):
     title: Mapped[str | None] = mapped_column(String(120), nullable=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     mood_label: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    tags: Mapped[str | None] = mapped_column(Text, nullable=True)
     media_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
 
