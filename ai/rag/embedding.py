@@ -1,0 +1,53 @@
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+
+
+_MODEL: Any = None
+
+
+def _project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _model_path() -> Path:
+    try:
+        from app.core.config import settings
+
+        return settings.RAG_EMBEDDING_MODEL_DIR
+    except Exception:
+        return _project_root() / "models" / "bge-small-zh-v1.5"
+
+
+def get_embedding_model():
+    global _MODEL
+    if _MODEL is None:
+        from sentence_transformers import SentenceTransformer
+
+        _MODEL = SentenceTransformer(str(_model_path()))
+    return _MODEL
+
+
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    if not texts:
+        return []
+    model = get_embedding_model()
+    vectors = model.encode(
+        texts,
+        normalize_embeddings=True,
+        convert_to_numpy=True,
+        show_progress_bar=False,
+    )
+    return vectors.astype(np.float32).tolist()
+
+
+def embed_text(text: str) -> list[float]:
+    vectors = embed_texts([text])
+    return vectors[0] if vectors else []
+
+
+def cosine_similarity(query: np.ndarray, candidate: np.ndarray) -> float:
+    if query.size == 0 or candidate.size == 0:
+        return 0.0
+    return float(np.dot(query, candidate))
