@@ -19,8 +19,8 @@ async def get_db():
 
 
 async def init_db():
-    from app.models.message import Base as MessageBase
+    from app.models.message import Base
 
     Path(settings.DATA_DIR).mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
-        await conn.run_sync(MessageBase.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all)

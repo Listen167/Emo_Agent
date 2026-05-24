@@ -26,7 +26,18 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = "empty"
     LLM_MODEL: str = "deepseek-chat"
     AUDIO_EMOTION_WEIGHT: float = 0.65
+    RAG_ENABLED: bool = False
+    TTS_ENABLED: bool = True
+    TTS_PROVIDER: str = "edge"
     TTS_VOICE: str = "zh-CN-YunxiNeural"
+    TTS_ALLOW_WINDOWS_FALLBACK: bool = False
+    KOKORO_MODEL_DIR: Path = PROJECT_ROOT / "models" / "kokoro-zh"
+    KOKORO_VOICE: str = "zf_001"
+    KOKORO_LANG_CODE: str = "z"
+    KOKORO_DEVICE: str | None = None
+    KOKORO_SAMPLE_RATE: int = 24000
+    KOKORO_SPEED: float = 1.0
+    KNOWLEDGE_RAW_DIR: Path = PROJECT_ROOT / "knowledge" / "raw"
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]
 
 

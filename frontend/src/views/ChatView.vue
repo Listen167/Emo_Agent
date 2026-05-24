@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-100 flex flex-col">
     <header class="bg-white border-b shadow-sm p-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold text-sky-700">学生情感语音 Agent</h1>
+      <h1 class="text-xl font-bold text-sky-700">大学生成长情绪 Agent</h1>
       <span class="text-xs text-slate-500">会话 {{ sid.slice(0, 8) }}</span>
     </header>
 
@@ -22,7 +22,7 @@
               v-if="message.role === 'user' && message.contentType === 'audio'"
               class="text-[11px] px-2 py-0.5 rounded-full bg-sky-200 text-sky-800"
             >
-              语音转写
+              语音输入
             </span>
             <span class="text-[11px] text-slate-400">{{ formatTime(message.createdAt) }}</span>
           </div>
@@ -55,7 +55,7 @@
       </button>
       <input
         v-model="txt"
-        placeholder="输入文字，或录音后自动发送"
+        placeholder="输入文字，或点击录音说话"
         class="flex-1 px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-sky-200"
         @keyup.enter="sendTxt"
       />
@@ -86,6 +86,7 @@ interface ViewMessage {
 }
 
 const TARGET_SAMPLE_RATE = 16000
+const APP_TIME_ZONE = 'Asia/Shanghai'
 
 const msgs = ref<ViewMessage[]>([])
 const txt = ref('')
@@ -306,12 +307,14 @@ const formatTime = (value: string) => {
     return value
   }
 
-  return date.toLocaleString('zh-CN', {
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: APP_TIME_ZONE,
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
-  })
+    minute: '2-digit',
+    hour12: false
+  }).format(date)
 }
 
 const scrollToBottom = async () => {

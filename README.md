@@ -1,182 +1,151 @@
 # Emo Agent
 
-一个基于 `FastAPI + Vue 3` 的情感对话 Agent 项目。
+Emo Agent is a campus-focused emotional companion chat project. It supports text or voice input, speech-to-text, emotion analysis, LLM response generation, optional TTS playback, chat history storage, and a first usable RAG flow for campus knowledge.
 
-用户可以输入文本或语音，系统会先做语音转文本与情感分析，再结合设定好的情绪提示词生成回复，并支持语音播报与聊天记录保存。
+## Features
 
-## 功能简介
+- Text and voice chat.
+- ASR: SenseVoice first, Whisper fallback.
+- Emotion analysis: text emotion prediction plus audio/text fusion.
+- LLM response: OpenAI-compatible API, emotion-aware system prompt.
+- TTS: supports `kokoro`, `edge`, and `windows` providers. `kokoro` is recommended for stable local Chinese speech.
+- Chat history: stores user and assistant messages with timestamps.
+- RAG: imports Markdown campus documents and retrieves relevant chunks for answers.
 
-- 文本输入对话
-- 语音输入对话
-- 语音自动转文本
-- 用户情绪识别
-- 根据情绪调整回复风格
-- Agent 回复语音播放
-- 聊天记录保存
-- 消息时间展示
-
-## 项目结构
+## Project Structure
 
 ```text
 Emo_Agent/
-├─ ai/                    # ASR、情感分析、LLM、TTS 等能力封装
-├─ backend/               # FastAPI 后端
+├─ ai/
+│  ├─ asr/              # speech-to-text provider and service
+│  ├─ emotion/          # text emotion provider and fusion service
+│  ├─ llm/              # prompt assembly and LLM service
+│  ├─ tts/              # TTS provider, service, and text sanitizer
+│  ├─ rag/              # knowledge import and retrieval
+│  ├─ memory/           # reserved for long-term memory
+│  └─ prompts/          # prompt templates
+├─ backend/             # FastAPI backend
 │  ├─ app/
-│  │  ├─ api/             # 接口
-│  │  ├─ core/            # 配置、数据库
-│  │  ├─ models/          # 数据模型
-│  │  ├─ schemas/         # Pydantic schema
-│  │  └─ services/        # 对话处理主流程
-│  ├─ data/               # 运行时数据（已忽略，不上传）
-│  ├─ .env                # 本地环境变量（已忽略，不上传）
+│  │  ├─ api/           # HTTP routes
+│  │  ├─ core/          # config and database
+│  │  ├─ models/        # SQLAlchemy models
+│  │  ├─ schemas/       # Pydantic schemas
+│  │  └─ services/      # conversation orchestration
 │  └─ requirements.txt
-├─ frontend/              # Vue 3 前端
-│  ├─ src/
-│  └─ package.json
-├─ models/                # 本地模型目录（已忽略，不上传）
-├─ .gitignore
-└─ README.md
+├─ frontend/            # Vue 3 frontend
+├─ knowledge/raw/       # Markdown files for RAG import
+├─ tests/               # basic unit tests
+└─ docs/                # development notes
 ```
 
-## 技术栈
+## Backend Setup
 
-- 后端：FastAPI、SQLAlchemy、SQLite
-- 前端：Vue 3、Vite、TypeScript、Tailwind CSS
-- 语音识别：SenseVoice / Whisper 回退
-- 情感分析：Transformers 本地模型
-- 大模型回复：OpenAI 兼容接口
-- 语音合成：在线 TTS + Windows 本地中文语音回退
-
-## 运行前说明
-
-这个仓库默认**不上传**以下内容：
-
-- `backend/data/` 运行数据
-- 数据库文件
-- 语音文件
-- 本地模型文件 `models/`
-- 环境变量文件 `.env`
-- 前端构建产物 `dist/`
-- `node_modules/`
-
-所以你把项目拉下来时需要自己准备：
-
-- Python 环境
-- Node.js 环境
-- 后端 `.env`
-- 本地模型目录（如果你的部署方式依赖这些模型）
-
-## 后端启动
-
-先进入后端目录并安装依赖：
-
-```bash
+```powershell
 cd backend
 pip install -r requirements.txt
-```
-
-然后启动服务：
-
-```bash
+copy .env.example .env
 python main.py
 ```
 
-默认后端地址：
-
-```text
-http://localhost:8000
-```
-
-## 前端启动
-
-先进入前端目录并安装依赖：
-
-```bash
-cd frontend
-npm install
-```
-
-启动开发服务器：
-
-```bash
-npm run dev
-```
-
-默认前端地址：
-
-```text
-http://localhost:5173
-```
-
-## 环境变量
-
-你当前项目主要会用到后端的这些配置项，写在 `backend/.env`：
+Edit `backend/.env` before running real LLM calls:
 
 ```env
 LLM_BASE_URL=https://api.deepseek.com/v1
 LLM_API_KEY=your_api_key
 LLM_MODEL=deepseek-chat
+RAG_ENABLED=false
+TTS_PROVIDER=edge
+TTS_ALLOW_WINDOWS_FALLBACK=false
 ```
 
-如果你后面有更多配置，也建议继续放在 `backend/.env`，不要直接写死到代码里。
+For local Kokoro Chinese TTS:
 
-## 聊天记录
-
-聊天记录默认保存在：
-
-```text
-backend/data/chat.db
+```env
+TTS_ENABLED=true
+TTS_PROVIDER=kokoro
+KOKORO_MODEL_DIR=D:\PragramFile\VScode\Emo_Agent\models\kokoro-zh
+KOKORO_VOICE=zf_001
+KOKORO_LANG_CODE=z
+KOKORO_SAMPLE_RATE=24000
+KOKORO_SPEED=1.0
 ```
 
-语音上传和 TTS 文件也会保存在：
+The available Chinese voice names are the `.pt` files under `models/kokoro-zh/voices/`, for example `zf_001` or `zm_009`.
 
-```text
-backend/data/
+## Frontend Setup
+
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
-这些目录已经加入 `.gitignore`，不会被上传到 GitHub。
+Frontend default URL: `http://localhost:5173`
 
-## 上传到 GitHub 前建议检查
+Backend default URL: `http://localhost:8000`
 
-在提交前，先确认以下内容没有被加入版本控制：
+## RAG Knowledge Import
+
+Put campus knowledge Markdown files in `knowledge/raw/`. Each file can use simple front matter:
+
+```markdown
+---
+title: 国家励志奖学金评定说明
+school: 示例大学
+college: 计算机学院
+category: 奖学金
+source: https://example.edu/policy
+year: 2026
+---
+
+正文内容...
+```
+
+Import documents:
+
+```powershell
+python -m ai.rag.ingest --dir knowledge/raw
+```
+
+Enable retrieval in `backend/.env`:
+
+```env
+RAG_ENABLED=true
+```
+
+## Tests
+
+Run basic unit tests from the project root:
+
+```powershell
+python -m unittest discover -s tests
+```
+
+Current basic coverage:
+
+- LLM prompt assembly.
+- TTS text sanitization.
+- Pipeline no-audio/no-text fallback reply.
+
+## Git Ignore Policy
+
+The repository should not upload runtime data, local models, environment files, build output, or dependencies.
+
+Ignored examples:
 
 - `backend/data/`
 - `models/`
 - `.env`
 - `frontend/node_modules/`
 - `frontend/dist/`
-- 各类 `.wav`、`.mp3`、`.webm` 文件
+- `*.wav`, `*.mp3`, `*.webm`
+- SQLite database files
 
-可以用下面命令检查：
+Before pushing:
 
-```bash
+```powershell
 git status
+git add .
+git commit -m "Refactor AI services and add RAG foundation"
+git push origin main
 ```
-
-如果某些不该上传的文件以前已经被 Git 跟踪过，需要先取消跟踪：
-
-```bash
-git rm -r --cached backend/data
-git rm -r --cached models
-git rm -r --cached frontend/node_modules
-git rm -r --cached frontend/dist
-```
-
-## 后续可改进方向
-
-- 换成更稳定的中文本地 TTS
-- 增加多轮上下文管理
-- 提供会话管理页面
-- 增加 Docker 部署方案
-- 增加模型下载脚本和 `.env.example`
-
-## 说明
-
-这个项目更适合学习和演示“语音 + 情绪 + 对话 Agent”的完整流程。
-
-如果你准备公开发布，建议你再补充：
-
-- `LICENSE`
-- `.env.example`
-- 模型下载说明
-- 部署文档

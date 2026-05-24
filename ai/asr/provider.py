@@ -1,21 +1,17 @@
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-import torch
-
-sys.path.append(str(Path(__file__).parent.parent / "backend"))
 
 
-_PROJECT_ROOT = Path(__file__).parent.parent
-_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-_MODEL_PATH = _PROJECT_ROOT / "models" / "SensevoiceSmall"
-_WHISPER_PATH = _PROJECT_ROOT / "models" / "whisper-base"
-_MODEL = None
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SENSEVOICE_PATH = PROJECT_ROOT / "models" / "SensevoiceSmall"
+WHISPER_PATH = PROJECT_ROOT / "models" / "whisper-base"
+
+_MODEL: Any = None
 _WHISPER_PIPE: Any = None
-
+_LABELS = ["neutral", "happy", "sad", "angry", "anxious", "surprised"]
 _EMOTION_TAG_MAP = {
     "HAPPY": "happy",
     "SAD": "sad",
@@ -25,17 +21,28 @@ _EMOTION_TAG_MAP = {
     "AFRAID": "anxious",
     "DISGUSTED": "angry",
 }
-_LABELS = ["neutral", "happy", "sad", "angry", "anxious", "surprised"]
 
 
-def _load_model():
+def _torch_device() -> str:
+    import torch
+
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def _transformer_device() -> int:
+    import torch
+
+    return 0 if torch.cuda.is_available() else -1
+
+
+def _load_sensevoice():
     global _MODEL
     if _MODEL is None:
         from funasr import AutoModel
 
         _MODEL = AutoModel(
-            model=str(_MODEL_PATH),
-            device=_DEVICE,
+            model=str(SENSEVOICE_PATH),
+            device=_torch_device(),
             disable_update=True,
         )
     return _MODEL
@@ -46,13 +53,12 @@ def _load_whisper():
     if _WHISPER_PIPE is None:
         from transformers import pipeline
 
-        device = 0 if torch.cuda.is_available() else -1
         _WHISPER_PIPE = pipeline(
             task="automatic-speech-recognition",
-            model=str(_WHISPER_PATH),
-            tokenizer=str(_WHISPER_PATH),
-            feature_extractor=str(_WHISPER_PATH),
-            device=device,
+            model=str(WHISPER_PATH),
+            tokenizer=str(WHISPER_PATH),
+            feature_extractor=str(WHISPER_PATH),
+            device=_transformer_device(),
         )
     return _WHISPER_PIPE
 
@@ -90,10 +96,10 @@ def _transcribe_with_whisper(audio_path: str) -> str:
 
 
 def transcribe(audio_path: str) -> tuple[str, np.ndarray | None]:
-    from funasr.utils.postprocess_utils import rich_transcription_postprocess
-
     try:
-        model = _load_model()
+        from funasr.utils.postprocess_utils import rich_transcription_postprocess
+
+        model = _load_sensevoice()
         result = model.generate(
             input=str(audio_path),
             language="auto",
@@ -102,15 +108,13 @@ def transcribe(audio_path: str) -> tuple[str, np.ndarray | None]:
             merge_vad=True,
             merge_length_s=15,
         )
-
         if not result:
             return "", None
 
         raw_text = str(result[0].get("text", ""))
-        emotion_vec = _parse_emotion(raw_text)
         text = rich_transcription_postprocess(raw_text).strip()
         print(f"[SenseVoice] Result: {text}")
-        return text, emotion_vec
+        return text, _parse_emotion(raw_text)
     except Exception as exc:
         print(f"[ASR Error] SenseVoice failed, fallback to Whisper: {exc}")
 

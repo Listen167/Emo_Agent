@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
+
+from app.core.time import to_app_timezone
 
 
 class EmotionResult(BaseModel):
@@ -21,6 +23,10 @@ class ChatResponse(BaseModel):
     user_created_at: datetime
     assistant_created_at: datetime
 
+    @field_serializer("user_created_at", "assistant_created_at")
+    def serialize_created_at(self, value: datetime) -> str:
+        return to_app_timezone(value).isoformat()
+
 
 class HistoryItem(BaseModel):
     id: int
@@ -31,3 +37,7 @@ class HistoryItem(BaseModel):
     emotion_conf: Optional[float] = None
     tts_audio_url: Optional[str] = None
     created_at: datetime
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: datetime) -> str:
+        return to_app_timezone(value).isoformat()
