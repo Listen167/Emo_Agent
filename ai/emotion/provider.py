@@ -14,7 +14,7 @@ KEYWORDS = {
     "sad": ["难过", "伤心", "失落", "崩溃", "委屈", "想哭", "emo", "疲惫", "孤独", "绝望"],
     "angry": ["生气", "愤怒", "烦死", "离谱", "讨厌", "不公平", "火大", "气死", "无语"],
     "anxious": ["焦虑", "紧张", "担心", "害怕", "压力", "deadline", "ddl", "来不及", "怎么办", "失眠"],
-    "surprised": ["惊讶", "震惊", "没想到", "居然", "突然", "意外", "啊？", "真的吗"],
+    "surprised": ["惊讶", "震惊", "没想到", "居然", "突然", "意外", "真的吗", "啊"],
 }
 
 
@@ -53,7 +53,7 @@ def _negative_distribution(text: str) -> dict[str, float]:
 def _keyword_fallback(text: str) -> np.ndarray:
     vec = np.zeros(len(LABELS), dtype=np.float32)
     weights = {label: _keyword_weight(text, label) for label in KEYWORDS}
-    best_label = max(weights, key=weights.get)
+    best_label = max(weights.items(), key=lambda item: item[1])[0]
 
     if weights[best_label] <= 0:
         vec[LABELS.index("neutral")] = 1.0
@@ -84,7 +84,7 @@ def predict_text(text: str) -> np.ndarray:
         sentiment_scores = {
             str(item["label"]).lower(): float(item["score"])
             for item in score_items
-            if "label" in item and "score" in item
+            if isinstance(item, dict) and "label" in item and "score" in item
         }
 
         positive_score = sentiment_scores.get("positive", 0.0)

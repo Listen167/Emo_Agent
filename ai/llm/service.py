@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from openai import OpenAI
+from openai.types.chat import ChatCompletionMessageParam
 
 from app.core.config import settings
 
@@ -39,23 +40,34 @@ class LLMService:
         emotion: dict,
         history: list[dict[str, str]] | None = None,
         knowledge_context: str | None = None,
-    ) -> list[dict[str, str]]:
+    ) -> list[ChatCompletionMessageParam]:
         emotion_label = str(emotion.get("label", "neutral"))
-        messages: list[dict[str, str]] = [{"role": "system", "content": self.build_system_prompt(emotion_label)}]
+        messages: list[ChatCompletionMessageParam] = [
+            {"role": "system", "content": self.build_system_prompt(emotion_label)}
+        ]
 
         if knowledge_context:
             messages.append(
                 {
                     "role": "system",
-                    "content": f"以下是可参考的校园知识库检索结果。回答时只使用与用户问题相关的部分；如果资料不足，请明确说明。\n{knowledge_context}",
+                    "content": (
+                        "以下是可参考的校园知识库检索结果。回答时只使用与用户问题相关的部分；"
+                        "如果资料不足，请明确说明。\n\n"
+                        "如果问题需要跨片段推理，例如“某比赛能加多少分”，必须先根据竞赛级别体系判断比赛级别，"
+                        "再根据推免加分办法查找对应级别和获奖等次的加分。"
+                        "如果用户没有提供获奖等次、赛事阶段、个人/团队排名，需要明确追问或列出不同情况。\n"
+                        f"{knowledge_context}"
+                    ),
                 }
             )
 
         for item in history or []:
             role = item.get("role", "")
             content = item.get("content", "").strip()
-            if role in {"user", "assistant"} and content:
-                messages.append({"role": role, "content": content})
+            if role == "user" and content:
+                messages.append({"role": "user", "content": content})
+            elif role == "assistant" and content:
+                messages.append({"role": "assistant", "content": content})
 
         messages.append({"role": "user", "content": user_input.strip()})
         return messages
