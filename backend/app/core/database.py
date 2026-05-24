@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import settings
@@ -24,3 +25,8 @@ async def init_db():
     Path(settings.DATA_DIR).mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        if url.startswith("sqlite+"):
+            columns = await conn.execute(text("PRAGMA table_info(knowledge_chunks)"))
+            column_names = {row[1] for row in columns.fetchall()}
+            if "embedding" not in column_names:
+                await conn.execute(text("ALTER TABLE knowledge_chunks ADD COLUMN embedding TEXT"))

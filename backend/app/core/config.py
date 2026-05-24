@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "deepseek-chat"
     AUDIO_EMOTION_WEIGHT: float = 0.65
     RAG_ENABLED: bool = False
+    RAG_EMBEDDING_ENABLED: bool = True
+    RAG_EMBEDDING_MODEL_DIR: Path = PROJECT_ROOT / "models" / "bge-small-zh-v1.5"
+    RAG_KEYWORD_WEIGHT: float = 0.35
+    RAG_VECTOR_WEIGHT: float = 0.65
     TTS_ENABLED: bool = True
     TTS_PROVIDER: str = "edge"
     TTS_VOICE: str = "zh-CN-YunxiNeural"

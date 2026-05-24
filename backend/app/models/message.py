@@ -69,4 +69,5 @@ class KnowledgeChunk(Base):
     chunk_index: Mapped[int] = mapped_column(Integer)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     embedding_id: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
+    embedding: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
