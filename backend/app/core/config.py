@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = "empty"
     LLM_MODEL: str = "deepseek-chat"
     AUDIO_EMOTION_WEIGHT: float = 0.65
+    ASR_LANGUAGE: str = "zh"
+    ASR_DEVICE: str | None = None
+    ASR_FORCE_SIMPLIFIED: bool = True
     RAG_ENABLED: bool = False
     RAG_EMBEDDING_ENABLED: bool = True
     RAG_EMBEDDING_MODEL_DIR: Path = PROJECT_ROOT / "models" / "bge-small-zh-v1.5"

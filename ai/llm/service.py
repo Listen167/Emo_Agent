@@ -14,20 +14,20 @@ class LLMService:
         self.client = OpenAI(base_url=settings.LLM_BASE_URL, api_key=settings.LLM_API_KEY)
         self.system_template = PROMPT_PATH.read_text(encoding="utf-8")
         self.emotion_prompts = {
-            "happy": "用户情绪偏积极。保持轻松真诚，可以放大成就感，但不要强行玩梗。",
-            "sad": "用户情绪偏低落。先共情和接住感受，再给一个小而可执行的建议。",
-            "angry": "用户可能有愤怒或不满。先承认其边界和感受，避免说教，帮助梳理事实与下一步。",
-            "anxious": "用户可能焦虑或压力较大。先降低紧张感，再把问题拆成可处理的小步骤。",
-            "neutral": "用户情绪较平稳。保持自然、清晰、有帮助，避免过度煽情。",
-            "surprised": "用户可能惊讶或困惑。先回应意外感，再帮助确认事实和选择。",
+            "happy": "用户情绪偏积极。保持自然轻快，但不要过度兴奋；先回应问题，再给出清晰结论。",
+            "sad": "用户情绪偏低落。语气要温和、稳定，先承接情绪，再给出可执行的信息。",
+            "angry": "用户情绪偏烦躁。避免说教和绕弯，直接解决问题，语气克制。",
+            "anxious": "用户情绪偏焦虑。把信息拆清楚，减少不确定性，优先给明确步骤。",
+            "neutral": "用户情绪平稳。保持简洁、准确、实用。",
+            "surprised": "用户情绪偏惊讶。先澄清事实，再解释原因和下一步。",
         }
         self.fallback_replies = {
-            "happy": "听起来这件事让你状态不错。可以先把这个积极变化记下来，也许它能帮你找到最近真正有效的节奏。",
-            "sad": "我能感觉到你现在不太好受。先不用急着解决所有问题，可以先说说最压着你的那一件事是什么。",
-            "angry": "这件事确实可能让人很不舒服。我们可以先把发生了什么、你最在意的点、下一步能做什么分开看。",
-            "anxious": "先把注意力放回当下。你可以告诉我最担心的具体结果是什么，我再帮你拆成几个可执行的小步骤。",
-            "neutral": "我明白。你可以继续补充一点背景，我会结合你的状态和上下文给你更具体的建议。",
-            "surprised": "这确实有点出乎意料。我们先确认关键事实，再判断它对你接下来的安排有什么影响。",
+            "happy": "当前大模型连接失败，但我收到了你的消息。你可以稍后重试，或先补充更具体的问题。",
+            "sad": "当前大模型连接失败。你可以先把最想解决的一点告诉我，恢复后我会优先处理。",
+            "angry": "当前大模型连接失败。建议先检查后端日志里的 LLM Error、API Key、base_url 和模型名。",
+            "anxious": "当前大模型连接失败。先不用反复改代码，优先检查网络、API Key、base_url 和模型名。",
+            "neutral": "当前大模型连接失败，请稍后重试，或检查后端 LLM 配置。",
+            "surprised": "当前大模型连接失败，所以没能生成完整回复。建议先看后端日志里的 LLM Error。",
         }
 
     def build_system_prompt(self, emotion_label: str) -> str:
@@ -51,11 +51,12 @@ class LLMService:
                 {
                     "role": "system",
                     "content": (
-                        "以下是可参考的校园知识库检索结果。回答时只使用与用户问题相关的部分；"
-                        "如果资料不足，请明确说明。\n\n"
-                        "如果问题需要跨片段推理，例如“某比赛能加多少分”，必须先根据竞赛级别体系判断比赛级别，"
-                        "再根据推免加分办法查找对应级别和获奖等次的加分。"
-                        "如果用户没有提供获奖等次、赛事阶段、个人/团队排名，需要明确追问或列出不同情况。\n"
+                        "下面是从本地学校知识库检索到的资料。回答校园政策、竞赛级别、推免加分等问题时，"
+                        "必须优先依据这些资料，不要泛泛建议用户去问教务处、辅导员或官网。\n"
+                        "如果资料能支持结论，请直接给出结论，并说明依据来自哪一条资料。\n"
+                        "如果资料只支持部分结论，请明确说“根据现有资料只能确定...”，不要编造缺失信息。\n"
+                        "如果不同资料需要组合推理，请先确定竞赛级别，再根据加分表计算或说明还缺少获奖等次、成员排序。\n\n"
+                        "本地知识库资料：\n"
                         f"{knowledge_context}"
                     ),
                 }
@@ -82,14 +83,14 @@ class LLMService:
         clean_input = user_input.strip()
         emotion_label = str(emotion.get("label", "neutral"))
         if not clean_input:
-            return "我刚才没有听清你的内容。你可以再说一遍，或者直接用文字告诉我。"
+            return "我刚才没有识别到有效内容。你可以再说一遍，或者直接用文字告诉我。"
 
         try:
             resp = self.client.chat.completions.create(
                 model=settings.LLM_MODEL,
                 messages=self.build_messages(clean_input, emotion, history, knowledge_context),
-                temperature=0.65,
-                max_tokens=300,
+                temperature=0.45,
+                max_tokens=500,
             )
             content = (resp.choices[0].message.content or "").strip()
             return content or self.fallback_replies.get(emotion_label, self.fallback_replies["neutral"])

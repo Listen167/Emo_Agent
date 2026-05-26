@@ -43,6 +43,11 @@ class ConversationOrchestrator:
         fused = self.emotion_service.fuse(audio_probs, text_probs, settings.AUDIO_EMOTION_WEIGHT)
         context_messages = await self._load_recent_context(sid, db)
         knowledge_context = await self._load_knowledge_context(final_text)
+        if knowledge_context:
+            print(f"[RAG] context loaded, chars={len(knowledge_context)}")
+        elif final_text and settings.RAG_ENABLED:
+            print("[RAG] no context matched")
+
         reply = await self._generate_reply(final_text, fused, context_messages, knowledge_context)
         tts_path = await self._synthesize_reply(reply, sid, fused["label"])
 
