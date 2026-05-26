@@ -13,7 +13,7 @@ from ai.rag.service import get_rag_service
 from ai.tts import get_tts_service
 from app.core.config import settings
 from app.core.time import utc_now
-from app.models.message import ChatMessage
+from app.models.message import ChatMessage, MoodLog
 from app.schemas.chat import ChatResponse, EmotionResult, HistoryItem
 
 
@@ -143,6 +143,7 @@ class ConversationOrchestrator:
         reply: str,
         tts_path: str | None,
     ) -> tuple[ChatMessage, ChatMessage]:
+        created_at = utc_now()
         user_msg = ChatMessage(
             session_id=session_id,
             role="user",
@@ -150,7 +151,7 @@ class ConversationOrchestrator:
             content=user_text,
             emotion_label=fused_emotion["label"],
             emotion_conf=fused_emotion["confidence"],
-            created_at=utc_now(),
+            created_at=created_at,
         )
         ai_msg = ChatMessage(
             session_id=session_id,
@@ -160,7 +161,15 @@ class ConversationOrchestrator:
             tts_audio_path=tts_path,
             created_at=utc_now(),
         )
-        db.add_all([user_msg, ai_msg])
+        mood_log = MoodLog(
+            session_id=session_id,
+            mood_label=fused_emotion["label"],
+            mood_score=fused_emotion["confidence"],
+            source="chat",
+            note=user_text[:120],
+            created_at=created_at,
+        )
+        db.add_all([user_msg, ai_msg, mood_log])
         await db.commit()
         await db.refresh(user_msg)
         await db.refresh(ai_msg)

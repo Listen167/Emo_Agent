@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.models.message import LifeRecord
+from app.models.message import LifeRecord, MoodLog
 from app.schemas.life import LifeRecordItem
 
 
@@ -83,6 +83,16 @@ async def create_record(
         media_path=media_path,
     )
     db.add(record)
+    if record.mood_label:
+        db.add(
+            MoodLog(
+                session_id=session_id,
+                mood_label=record.mood_label,
+                mood_score=None,
+                source="life",
+                note=record.title or record.content[:80],
+            )
+        )
     await db.commit()
     await db.refresh(record)
     return _to_item(record)
