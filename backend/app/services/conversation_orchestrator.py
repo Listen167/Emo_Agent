@@ -17,6 +17,17 @@ from app.models.message import ChatMessage, MoodLog
 from app.schemas.chat import ChatResponse, EmotionResult, HistoryItem
 
 
+EBTI_TEST_URL = "/ebti-test/index.html"
+
+
+def is_ebti_request(text: str) -> bool:
+    normalized = text.lower()
+    has_test_intent = any(term in normalized for term in ("测试", "测一下", "测测", "人格", "性格", "test"))
+    has_ebti = "ebti" in normalized
+    has_mbti = "mbti" in normalized
+    return has_ebti or (has_mbti and has_test_intent)
+
+
 class ConversationOrchestrator:
     def __init__(self) -> None:
         self.asr_service = get_asr_service()
@@ -124,6 +135,11 @@ class ConversationOrchestrator:
     ) -> str:
         if not final_text:
             return "我刚才没有听清你的内容。你可以再说一遍，或者直接用文字告诉我。"
+        if is_ebti_request(final_text):
+            return (
+                "可以，EBTI 测试入口已经准备好。点击下面的“开始 EBTI 测试”按钮，"
+                f"回答完题目后页面会自动生成你的结果。\n\n测试地址：{EBTI_TEST_URL}"
+            )
         return await asyncio.to_thread(
             self.llm_service.generate,
             final_text,

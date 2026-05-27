@@ -29,6 +29,16 @@
 
           <p class="text-sm whitespace-pre-wrap leading-6">{{ message.content }}</p>
 
+          <a
+            v-if="message.role === 'assistant' && shouldShowEbtiLink(message.content)"
+            href="/ebti-test/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mt-3 inline-flex items-center rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600"
+          >
+            开始 EBTI 测试
+          </a>
+
           <div v-if="message.role === 'assistant' && message.ttsAudioUrl" class="mt-3">
             <audio :src="message.ttsAudioUrl" controls preload="none" class="w-full h-10"></audio>
           </div>
@@ -87,6 +97,7 @@ interface ViewMessage {
 
 const TARGET_SAMPLE_RATE = 16000
 const APP_TIME_ZONE = 'Asia/Shanghai'
+const EBTI_LINK_PATTERN = /(\/ebti-test\/|\/ebti-test\/index\.html|EBTI 测试|开始 EBTI|测一测 EBTI|人格测试)/
 
 const msgs = ref<ViewMessage[]>([])
 const txt = ref('')
@@ -316,6 +327,8 @@ const formatTime = (value: string) => {
     hour12: false
   }).format(date)
 }
+
+const shouldShowEbtiLink = (content: string) => EBTI_LINK_PATTERN.test(content)
 
 const scrollToBottom = async () => {
   await nextTick()
