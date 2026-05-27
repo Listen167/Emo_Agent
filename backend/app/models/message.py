@@ -36,6 +36,17 @@ class MoodLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
 
 
+class NPCAffinity(Base):
+    __tablename__ = "npc_affinities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    npc_name: Mapped[str] = mapped_column(String(40), index=True)
+    player_id: Mapped[str] = mapped_column(String(80), default="player", index=True)
+    affinity: Mapped[float] = mapped_column(Float, default=50.0)
+    level: Mapped[str] = mapped_column(String(20), default="友好")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
+
+
 class LifeRecord(Base):
     __tablename__ = "life_records"
 

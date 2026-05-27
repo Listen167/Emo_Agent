@@ -12,7 +12,7 @@ from . import edge_provider, kokoro_provider, windows_provider
 from .text import sanitize_for_tts
 
 
-def synthesize(text: str, session_id: str, emotion: str) -> str:
+def synthesize(text: str, session_id: str, emotion: str, voice: str | None = None) -> str:
     provider = settings.TTS_PROVIDER.lower().strip()
 
     if provider == "kokoro":
@@ -22,7 +22,7 @@ def synthesize(text: str, session_id: str, emotion: str) -> str:
         return windows_provider.synthesize(text, session_id, emotion)
 
     if provider == "edge":
-        path = edge_provider.synthesize(text, session_id, emotion)
+        path = edge_provider.synthesize(text, session_id, emotion, voice)
         if path:
             return path
         if settings.TTS_ALLOW_WINDOWS_FALLBACK:

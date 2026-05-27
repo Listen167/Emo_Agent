@@ -24,18 +24,18 @@ _EDGE_RATE_BY_EMOTION = {
 }
 
 
-async def _save_with_edge_tts(text: str, out_path: Path, emotion: str) -> None:
+async def _save_with_edge_tts(text: str, out_path: Path, emotion: str, voice: str | None = None) -> None:
     import edge_tts
 
     communicator = edge_tts.Communicate(
         text=text,
-        voice=settings.TTS_VOICE,
+        voice=voice or settings.TTS_VOICE,
         rate=_EDGE_RATE_BY_EMOTION.get(emotion, "+0%"),
     )
     await communicator.save(str(out_path))
 
 
-def synthesize(text: str, session_id: str, emotion: str) -> str:
+def synthesize(text: str, session_id: str, emotion: str, voice: str | None = None) -> str:
     global _EDGE_TTS_ENABLED
 
     clean_text = sanitize_for_tts(text)
@@ -47,7 +47,7 @@ def synthesize(text: str, session_id: str, emotion: str) -> str:
     out_path = out_dir / f"{emotion}_{uuid.uuid4().hex[:10]}.mp3"
 
     try:
-        asyncio.run(_save_with_edge_tts(clean_text, out_path, emotion))
+        asyncio.run(_save_with_edge_tts(clean_text, out_path, emotion, voice))
         if out_path.exists() and out_path.stat().st_size > 0:
             return str(Path("tts") / session_id / out_path.name)
         raise RuntimeError("edge-tts output file is empty")
