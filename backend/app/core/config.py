@@ -46,7 +46,9 @@ class Settings(BaseSettings):
     KOKORO_SAMPLE_RATE: int = 24000
     KOKORO_SPEED: float = 1.0
     KNOWLEDGE_RAW_DIR: Path = PROJECT_ROOT / "knowledge" / "raw"
-    CORS_ORIGINS: list[str] = ["http://localhost:5173"]
+    CORS_ORIGINS: list[str] = ["http://localhost:5173", "*"]
+    # 生产环境（CloudBase + 内网穿透）建议设置 CORS_ORIGINS=["*"]
+    # 或指定具体域名: CORS_ORIGINS=["https://你的环境.tcloudbaseapp.com"]
 
 
 settings = Settings()

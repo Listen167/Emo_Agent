@@ -1,0 +1,15 @@
+{
+  "envId": "你的CloudBase环境ID",
+  "framework": {
+    "name": "emo-agent",
+    "plugins": {
+      "client": {
+        "use": "@cloudbase/framework-plugin-website",
+        "inputs": {
+          "outputPath": "./frontend/dist",
+          "cloudPath": "/"
+        }
+      }
+    }
+  }
+}

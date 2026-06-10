@@ -1,3 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Dancing+Script:wght@600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --journal-paper: #fdfbf7;
+  --journal-paper-deep: #f2e6cf;
+  --journal-kodak: #e8c36c;
+  --journal-ink: #3e3228;
+  --journal-muted: #7a6754;
+  --journal-stamp: #c85a54;
+  --journal-film: #1c130e;
+  --journal-glass: rgb(255 255 255 / 58%);
+  --journal-glass-warm: rgb(255 241 205 / 34%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+html {
+  background: var(--journal-paper);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  color: var(--journal-ink);
+  font-family: "Courier Prime", "Courier New", monospace;
+  background:
+    radial-gradient(circle at 14% 18%, rgb(200 90 84 / 10%), transparent 15rem),
+    radial-gradient(circle at 86% 78%, rgb(98 62 35 / 10%), transparent 16rem),
+    linear-gradient(90deg, rgb(62 50 40 / 4%) 1px, transparent 1px),
+    linear-gradient(rgb(62 50 40 / 3%) 1px, transparent 1px),
+    var(--journal-paper);
+  background-size: auto, auto, 28px 28px, 28px 28px, auto;
+}
+
+@media print {
+  body {
+    overflow: visible;
+  }
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+.script-title {
+  font-family: "Dancing Script", "Brush Script MT", cursive;
+  letter-spacing: 0;
+}
+
+.paper-texture {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 16%, rgb(120 72 38 / 8%), transparent 7rem),
+    radial-gradient(circle at 76% 88%, rgb(200 90 84 / 8%), transparent 8rem),
+    linear-gradient(135deg, rgb(255 255 255 / 42%), rgb(232 195 108 / 12%)),
+    var(--journal-paper);
+}
+
+.paper-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.48;
+  background:
+    linear-gradient(100deg, transparent 0 47%, rgb(62 50 40 / 5%) 48%, transparent 50%),
+    radial-gradient(circle at 8% 84%, rgb(118 79 44 / 10%), transparent 8rem),
+    radial-gradient(circle at 94% 12%, rgb(118 79 44 / 8%), transparent 7rem);
+  mix-blend-mode: multiply;
+}
+
+.film-strip {
+  color: #fff8e8;
+  background:
+    radial-gradient(circle, #fff8e8 35%, transparent 38%) left 6px top 6px / 28px 16px repeat-x,
+    radial-gradient(circle, #fff8e8 35%, transparent 38%) left 6px bottom 6px / 28px 16px repeat-x,
+    linear-gradient(180deg, #2b1c13, #100b08);
+}

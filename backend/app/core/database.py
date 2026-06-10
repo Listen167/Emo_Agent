@@ -37,3 +37,19 @@ async def init_db():
                 await conn.execute(text("ALTER TABLE life_records ADD COLUMN location VARCHAR(120)"))
             if "tags" not in life_column_names:
                 await conn.execute(text("ALTER TABLE life_records ADD COLUMN tags TEXT"))
+
+            profile_columns = await conn.execute(text("PRAGMA table_info(user_profiles)"))
+            profile_column_names = {row[1] for row in profile_columns.fetchall()}
+            profile_alters = {
+                "nickname": "ALTER TABLE user_profiles ADD COLUMN nickname VARCHAR(40)",
+                "avatar_path": "ALTER TABLE user_profiles ADD COLUMN avatar_path VARCHAR(255)",
+                "motto": "ALTER TABLE user_profiles ADD COLUMN motto VARCHAR(160)",
+                "gender": "ALTER TABLE user_profiles ADD COLUMN gender VARCHAR(20)",
+                "ebti_type": "ALTER TABLE user_profiles ADD COLUMN ebti_type VARCHAR(12)",
+                "ebti_name": "ALTER TABLE user_profiles ADD COLUMN ebti_name VARCHAR(40)",
+                "ebti_avatar": "ALTER TABLE user_profiles ADD COLUMN ebti_avatar VARCHAR(255)",
+                "updated_at": "ALTER TABLE user_profiles ADD COLUMN updated_at DATETIME",
+            }
+            for column_name, alter_sql in profile_alters.items():
+                if column_name not in profile_column_names:
+                    await conn.execute(text(alter_sql))

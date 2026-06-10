@@ -1,69 +1,75 @@
 <template>
-  <div class="min-h-screen bg-emerald-50">
-    <header class="bg-white border-b p-4">
-      <h1 class="text-xl font-bold text-emerald-900">心情日历</h1>
-      <p class="text-xs text-emerald-700 mt-1">按年月查看自己的心情贡献图。</p>
+  <div class="mood-journal">
+    <header class="mood-header">
+      <div>
+        <span class="kodak-chip">Exposure Log</span>
+        <h1 class="script-title">拍摄记录</h1>
+        <p>查看曝光曲线，重温拍摄那一刻的 Sunny 26°C。</p>
+      </div>
+      <div class="meter-dial">
+        <span>ISO</span>
+        <strong>400</strong>
+      </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-4 space-y-4">
-      <section class="bg-white rounded-2xl shadow-sm p-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+    <main class="mood-layout">
+      <section class="calendar-card">
+        <span class="washi-tape"></span>
+        <div class="calendar-toolbar">
           <div>
-            <h2 class="font-semibold text-slate-800">{{ selectedYear }} 年 {{ selectedMonth }} 月</h2>
-            <p class="text-xs text-slate-500 mt-1">每个方块代表一天，颜色表示当天主要情绪，深浅表示记录次数。</p>
+            <h2>{{ selectedYear }} 年 {{ selectedMonth }} 月</h2>
+            <p>每个方块代表一天，颜色表示当天主要情绪，深浅表示记录次数。</p>
           </div>
 
-          <div class="flex gap-2">
+          <div class="select-row">
             <select v-model.number="selectedYear" class="select" @change="load">
               <option v-for="year in yearOptions" :key="year" :value="year">{{ year }} 年</option>
             </select>
             <select v-model.number="selectedMonth" class="select" @change="load">
               <option v-for="month in 12" :key="month" :value="month">{{ month }} 月</option>
             </select>
-            <button class="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white" @click="goCurrentMonth">本月</button>
+            <button @click="goCurrentMonth">本月</button>
           </div>
         </div>
 
-        <div class="mt-5 grid grid-cols-7 gap-2 text-center text-xs text-slate-500">
+        <div class="week-row">
           <div v-for="week in weekLabels" :key="week">{{ week }}</div>
         </div>
 
-        <div class="mt-2 grid grid-cols-7 gap-1 w-fit">
+        <div class="calendar-grid">
           <div
             v-for="cell in calendarCells"
             :key="cell.key"
             :title="tooltip(cell)"
-            :class="[
-              'h-7 w-7 rounded-md border flex items-center justify-center text-[10px] transition',
-              cell.inMonth ? colorClass(cell) : 'bg-transparent border-transparent text-transparent'
-            ]"
+            :class="['calendar-cell', cell.inMonth ? colorClass(cell) : 'empty-cell']"
           >
-            <span :class="cell.mood ? 'text-white font-semibold drop-shadow-sm' : 'text-slate-400'">
+            <span :class="cell.mood ? 'marked-day' : 'quiet-day'">
               {{ cell.day || '' }}
             </span>
           </div>
         </div>
 
-        <div class="mt-4 flex flex-wrap gap-3 text-xs text-slate-600">
-          <span v-for="item in legend" :key="item.label" class="flex items-center gap-1">
-            <i :class="['h-3 w-3 rounded-sm inline-block', item.className]" />
+        <div class="legend-row">
+          <span v-for="item in legend" :key="item.label">
+            <i :class="item.className" />
             {{ item.text }}
           </span>
         </div>
       </section>
 
-      <section class="grid gap-3 md:grid-cols-3">
-        <div class="bg-white rounded-2xl p-4 shadow-sm">
-          <p class="text-xs text-slate-500">当月记录数</p>
-          <p class="text-3xl font-bold text-slate-900 mt-2">{{ summary?.total_count || 0 }}</p>
+      <section class="stats-board">
+        <div class="stat-card count-card">
+          <span>SHOT COUNT</span>
+          <strong>{{ summary?.total_count || 0 }}</strong>
+          <p>当月记录数</p>
         </div>
-        <div class="bg-white rounded-2xl p-4 shadow-sm md:col-span-2">
-          <p class="text-xs text-slate-500 mb-3">当月情绪分布</p>
-          <div class="flex flex-wrap gap-2">
-            <span v-for="item in moodStats" :key="item.label" class="rounded-full bg-slate-100 px-3 py-1 text-sm">
+        <div class="stat-card distribution-card">
+          <span>EMOTION CONTACT SHEET</span>
+          <div class="mood-pills">
+            <span v-for="item in moodStats" :key="item.label">
               {{ moodText(item.label) }} {{ item.count }}
             </span>
-            <span v-if="moodStats.length === 0" class="text-sm text-slate-400">暂无记录</span>
+            <em v-if="moodStats.length === 0">暂无记录</em>
           </div>
         </div>
       </section>
@@ -165,17 +171,17 @@ const moodText = (mood: string) => {
 }
 
 const colorClass = (cell: CalendarCell) => {
-  if (!cell.mood) return 'bg-slate-100 border-slate-200'
+  if (!cell.mood) return 'no-mood'
   const strong = cell.mood.count >= 3
   const map: Record<string, string> = {
-    happy: strong ? 'bg-amber-500 border-amber-500' : 'bg-amber-300 border-amber-300',
-    neutral: strong ? 'bg-emerald-500 border-emerald-500' : 'bg-emerald-300 border-emerald-300',
-    anxious: strong ? 'bg-orange-500 border-orange-500' : 'bg-orange-300 border-orange-300',
-    sad: strong ? 'bg-blue-500 border-blue-500' : 'bg-blue-300 border-blue-300',
-    angry: strong ? 'bg-red-600 border-red-600' : 'bg-red-400 border-red-400',
-    surprised: strong ? 'bg-violet-500 border-violet-500' : 'bg-violet-300 border-violet-300'
+    happy: strong ? 'mood-happy strong' : 'mood-happy',
+    neutral: strong ? 'mood-neutral strong' : 'mood-neutral',
+    anxious: strong ? 'mood-anxious strong' : 'mood-anxious',
+    sad: strong ? 'mood-sad strong' : 'mood-sad',
+    angry: strong ? 'mood-angry strong' : 'mood-angry',
+    surprised: strong ? 'mood-surprised strong' : 'mood-surprised'
   }
-  return map[cell.mood.mood_label] || 'bg-slate-300 border-slate-300'
+  return map[cell.mood.mood_label] || 'no-mood'
 }
 
 const tooltip = (cell: CalendarCell) => {
@@ -189,11 +195,305 @@ const tooltip = (cell: CalendarCell) => {
 </script>
 
 <style scoped>
+.mood-journal {
+  min-height: 100vh;
+  padding: 26px 30px 42px;
+}
+
+.mood-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 28px;
+  border: 1px solid rgb(62 50 40 / 16%);
+  background: rgb(255 248 232 / 72%);
+  box-shadow: 0 16px 38px rgb(62 50 40 / 12%);
+}
+
+.mood-header h1 {
+  margin: 8px 0 0;
+  font-size: clamp(44px, 6vw, 72px);
+  line-height: 0.9;
+}
+
+.mood-header p {
+  margin: 8px 0 0;
+  color: var(--journal-muted);
+  font-size: 14px;
+}
+
+.kodak-chip {
+  display: inline-block;
+  padding: 5px 12px;
+  background: var(--journal-kodak);
+  color: var(--journal-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.meter-dial {
+  width: 112px;
+  height: 112px;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff8e8;
+  background: radial-gradient(circle at center, #3e3228 0 30%, #20150f 31% 100%);
+  border: 8px solid #f5e8ce;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 18%), 0 12px 26px rgb(62 50 40 / 22%);
+}
+
+.meter-dial span,
+.meter-dial strong {
+  display: block;
+  text-align: center;
+}
+
+.meter-dial span {
+  align-self: end;
+  font-size: 11px;
+}
+
+.meter-dial strong {
+  align-self: start;
+  font-size: 28px;
+}
+
+.mood-layout {
+  display: grid;
+  gap: 22px;
+  padding-top: 26px;
+}
+
+.calendar-card {
+  position: relative;
+  padding: 24px;
+  border: 1px solid rgb(62 50 40 / 18%);
+  background: #fff8e8;
+  box-shadow: 0 18px 42px rgb(62 50 40 / 16%);
+  clip-path: polygon(0 1%, 99% 0, 100% 98%, 1% 100%);
+}
+
+.washi-tape {
+  position: absolute;
+  top: -12px;
+  left: 44px;
+  width: 128px;
+  height: 28px;
+  rotate: -3deg;
+  background: rgb(232 195 108 / 58%);
+  border: 1px solid rgb(62 50 40 / 10%);
+}
+
+.calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.calendar-toolbar h2 {
+  margin: 0;
+  color: var(--journal-ink);
+  font-size: 24px;
+}
+
+.calendar-toolbar p {
+  margin: 6px 0 0;
+  color: var(--journal-muted);
+  font-size: 13px;
+}
+
+.select-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .select {
-  border: 1px solid rgb(209 213 219);
-  border-radius: 0.5rem;
+  border: 1px solid rgb(62 50 40 / 18%);
+  border-radius: 10px;
   padding: 0.5rem 0.75rem;
-  background: white;
+  background: rgb(253 251 247 / 82%);
+  color: var(--journal-ink);
   font-size: 0.875rem;
+}
+
+.select-row button {
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  color: #fff8e8;
+  font-size: 0.875rem;
+  font-weight: 700;
+  background: linear-gradient(145deg, #4b3525, #1a120d);
+  cursor: pointer;
+}
+
+.week-row,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(36px, 1fr));
+  gap: 8px;
+}
+
+.week-row {
+  margin-top: 22px;
+  color: var(--journal-muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+.calendar-grid {
+  margin-top: 10px;
+}
+
+.calendar-cell {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(62 50 40 / 14%);
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.calendar-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgb(62 50 40 / 14%);
+}
+
+.empty-cell {
+  opacity: 0;
+}
+
+.marked-day {
+  color: #fff8e8;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgb(62 50 40 / 36%);
+}
+
+.quiet-day {
+  color: rgb(62 50 40 / 46%);
+}
+
+.no-mood {
+  background: rgb(253 251 247 / 72%);
+}
+
+.mood-happy { background: #e8c36c; }
+.mood-neutral { background: #87a777; }
+.mood-anxious { background: #d9894d; }
+.mood-sad { background: #6f91a8; }
+.mood-angry { background: #c85a54; }
+.mood-surprised { background: #9a7aa8; }
+.strong { box-shadow: inset 0 0 0 3px rgb(62 50 40 / 18%); }
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  color: var(--journal-muted);
+  font-size: 12px;
+}
+
+.legend-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-row i {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border-radius: 3px;
+}
+
+.legend-row .bg-amber-400 { background: #e8c36c; }
+.legend-row .bg-emerald-300 { background: #87a777; }
+.legend-row .bg-orange-400 { background: #d9894d; }
+.legend-row .bg-blue-400 { background: #6f91a8; }
+.legend-row .bg-red-500 { background: #c85a54; }
+.legend-row .bg-violet-400 { background: #9a7aa8; }
+.legend-row .bg-slate-100 { background: #fdfbf7; border: 1px solid rgb(62 50 40 / 14%); }
+
+.stats-board {
+  display: grid;
+  grid-template-columns: minmax(190px, 260px) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.stat-card {
+  padding: 22px;
+  border: 1px solid rgb(62 50 40 / 16%);
+  background: rgb(255 248 232 / 78%);
+  box-shadow: 0 14px 30px rgb(62 50 40 / 12%);
+}
+
+.stat-card > span {
+  color: var(--journal-stamp);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.count-card strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--journal-ink);
+  font-size: 58px;
+  line-height: 1;
+}
+
+.count-card p {
+  margin: 8px 0 0;
+  color: var(--journal-muted);
+}
+
+.mood-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.mood-pills span,
+.mood-pills em {
+  border: 1px solid rgb(62 50 40 / 14%);
+  border-radius: 999px;
+  padding: 0.42rem 0.78rem;
+  background: rgb(253 251 247 / 74%);
+  color: var(--journal-muted);
+  font-style: normal;
+  font-size: 14px;
+}
+
+@media (max-width: 760px) {
+  .mood-journal {
+    padding: 16px 14px 26px;
+  }
+
+  .meter-dial {
+    display: none;
+  }
+
+  .calendar-card {
+    padding: 20px 14px;
+  }
+
+  .week-row,
+  .calendar-grid {
+    grid-template-columns: repeat(7, minmax(32px, 1fr));
+    gap: 5px;
+  }
+
+  .calendar-cell {
+    min-height: 34px;
+  }
+
+  .stats-board {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -36,6 +36,28 @@ class MoodLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
 
 
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[str] = mapped_column(String(36), unique=True, index=True)
+    nickname: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    avatar_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    motto: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    gender: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    ebti_type: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    ebti_name: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    ebti_avatar: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        onupdate=utc_now,
+        server_default=func.now(),
+        index=True,
+    )
+
+
 class NPCAffinity(Base):
     __tablename__ = "npc_affinities"
 

@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v1 import chat, life, mood, town
+from app.api.v1 import chat, life, mood, profile, resume, town
 from app.core.config import settings
 from app.core.database import init_db
 
@@ -35,6 +35,8 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(life.router)
 app.include_router(mood.router)
+app.include_router(profile.router)
+app.include_router(resume.router)
 app.include_router(town.router)
 app.mount("/data", StaticFiles(directory=str(settings.DATA_DIR)), name="data")
 

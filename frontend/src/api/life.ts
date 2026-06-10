@@ -1,6 +1,4 @@
-import axios from 'axios'
-
-const api = axios.create({ baseURL: '/api', timeout: 60000 })
+import api from './client'
 
 export interface LifeRecordItem {
   id: number
