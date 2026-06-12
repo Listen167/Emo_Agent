@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.core.time import utc_now
@@ -58,6 +58,40 @@ class UserProfile(Base):
     )
 
 
+class GrowthProfile(Base):
+    __tablename__ = "growth_profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    nickname: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    current_state: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    focus: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    personality: Mapped[str] = mapped_column(String(20), default="warm", server_default="warm")
+    weekly_goal: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    setup_completed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    private_mode: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    anonymous_default: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    crisis_guard: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        onupdate=utc_now,
+        server_default=func.now(),
+        index=True,
+    )
+
+
+class GrowthMemory(Base):
+    __tablename__ = "growth_memories"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[str] = mapped_column(String(80), index=True)
+    category: Mapped[str] = mapped_column(String(40), default="目标", server_default="目标")
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
+
+
 class NPCAffinity(Base):
     __tablename__ = "npc_affinities"
 
@@ -80,6 +114,45 @@ class LifeRecord(Base):
     location: Mapped[str | None] = mapped_column(String(120), nullable=True)
     tags: Mapped[str | None] = mapped_column(Text, nullable=True)
     media_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    visibility: Mapped[str] = mapped_column(String(20), default="private", server_default="private", index=True)
+    like_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    comment_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    repost_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
+
+
+class SocialLike(Base):
+    __tablename__ = "social_likes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    record_id: Mapped[int] = mapped_column(Integer, index=True)
+    session_id: Mapped[str] = mapped_column(String(36), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
+
+
+class SocialComment(Base):
+    __tablename__ = "social_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    record_id: Mapped[int] = mapped_column(Integer, index=True)
+    session_id: Mapped[str] = mapped_column(String(36), index=True)
+    parent_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    reply_to_comment_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    reply_to_session_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    author_type: Mapped[str] = mapped_column(String(20), default="user", server_default="user", index=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    like_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    reply_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
+
+
+class SocialRepost(Base):
+    __tablename__ = "social_reposts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    record_id: Mapped[int] = mapped_column(Integer, index=True)
+    session_id: Mapped[str] = mapped_column(String(36), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now(), index=True)
 
 

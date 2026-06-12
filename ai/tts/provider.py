@@ -8,7 +8,7 @@ if str(BACKEND) not in sys.path:
 
 from app.core.config import settings
 
-from . import edge_provider, kokoro_provider, windows_provider
+from . import edge_provider, kokoro_provider, tencent_provider, windows_provider
 from .text import sanitize_for_tts
 
 
@@ -29,6 +29,9 @@ def synthesize(text: str, session_id: str, emotion: str, voice: str | None = Non
             return windows_provider.synthesize(text, session_id, emotion)
         print("[TTS] skipped local fallback. Set TTS_ALLOW_WINDOWS_FALLBACK=true to enable Windows TTS.")
         return ""
+
+    if provider in {"tencent", "api"}:
+        return tencent_provider.synthesize(text, session_id, emotion, voice)
 
     print(f"[TTS] unknown provider: {settings.TTS_PROVIDER}")
     return ""

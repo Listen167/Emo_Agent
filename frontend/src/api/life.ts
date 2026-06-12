@@ -9,6 +9,11 @@ export interface LifeRecordItem {
   location?: string | null
   tags: string[]
   media_url?: string | null
+  visibility: 'private' | 'public'
+  like_count: number
+  comment_count: number
+  repost_count: number
+  published_at?: string | null
   created_at: string
 }
 

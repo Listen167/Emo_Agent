@@ -1,0 +1,33 @@
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DEFAULT_TIMEOUT=1000 \
+    PIP_INDEX_URL=https://mirrors.cloud.tencent.com/pypi/simple
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        ffmpeg \
+        libgomp1 \
+        libsndfile1 \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements-no-torch.txt /app/backend/requirements-no-torch.txt
+
+RUN python -m pip install --upgrade pip \
+    && python -m pip install --retries 10 torch==2.4.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cpu \
+    && python -m pip install --retries 10 -r /app/backend/requirements-no-torch.txt
+
+COPY ai /app/ai
+COPY backend /app/backend
+
+WORKDIR /app/backend
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

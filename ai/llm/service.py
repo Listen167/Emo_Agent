@@ -40,6 +40,7 @@ class LLMService:
         emotion: dict,
         history: list[dict[str, str]] | None = None,
         knowledge_context: str | None = None,
+        user_context: str | None = None,
     ) -> list[ChatCompletionMessageParam]:
         emotion_label = str(emotion.get("label", "neutral"))
         messages: list[ChatCompletionMessageParam] = [
@@ -62,6 +63,19 @@ class LLMService:
                 }
             )
 
+        if user_context:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": (
+                        "下面是当前用户在成长中心保存的私有档案和长期记忆。"
+                        "这些内容只属于当前 session，用来让小曦更连续地陪伴这个用户；"
+                        "不要把它当成其他用户的信息，也不要主动泄露为系统数据。\n\n"
+                        f"当前用户成长中心资料：\n{user_context}"
+                    ),
+                }
+            )
+
         for item in history or []:
             role = item.get("role", "")
             content = item.get("content", "").strip()
@@ -79,6 +93,7 @@ class LLMService:
         emotion: dict,
         history: list[dict[str, str]] | None = None,
         knowledge_context: str | None = None,
+        user_context: str | None = None,
     ) -> str:
         clean_input = user_input.strip()
         emotion_label = str(emotion.get("label", "neutral"))
@@ -88,7 +103,7 @@ class LLMService:
         try:
             resp = self.client.chat.completions.create(
                 model=settings.LLM_MODEL,
-                messages=self.build_messages(clean_input, emotion, history, knowledge_context),
+                messages=self.build_messages(clean_input, emotion, history, knowledge_context, user_context),
                 temperature=0.45,
                 max_tokens=500,
             )
@@ -97,6 +112,40 @@ class LLMService:
         except Exception as exc:
             print(f"[LLM Error] {exc}")
             return self.fallback_replies.get(emotion_label, self.fallback_replies["neutral"])
+
+    def stream_generate(
+        self,
+        user_input: str,
+        emotion: dict,
+        history: list[dict[str, str]] | None = None,
+        knowledge_context: str | None = None,
+        user_context: str | None = None,
+    ):
+        clean_input = user_input.strip()
+        emotion_label = str(emotion.get("label", "neutral"))
+        if not clean_input:
+            yield "我刚才没有识别到有效内容。你可以再说一遍，或者直接用文字告诉我。"
+            return
+
+        try:
+            stream = self.client.chat.completions.create(
+                model=settings.LLM_MODEL,
+                messages=self.build_messages(clean_input, emotion, history, knowledge_context, user_context),
+                temperature=0.45,
+                max_tokens=500,
+                stream=True,
+            )
+            yielded = False
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content if chunk.choices else None
+                if delta:
+                    yielded = True
+                    yield delta
+            if not yielded:
+                yield self.fallback_replies.get(emotion_label, self.fallback_replies["neutral"])
+        except Exception as exc:
+            print(f"[LLM Stream Error] {exc}")
+            yield self.fallback_replies.get(emotion_label, self.fallback_replies["neutral"])
 
 
 _llm_service = LLMService()

@@ -3,23 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EBTI - 学历自嘲人格测试</title>
+  <title>我的暗房 · EBTI 暗卷测试</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="darkroom-props" aria-hidden="true">
+    <div class="film-canister">
+      <span class="canister-lid"></span>
+      <span class="canister-body"></span>
+      <span class="film-tail"></span>
+    </div>
+    <div class="xiaoxi-lab-sticker">
+      <img id="xiaoxi-prop-img" src="/xiaoxi/think.png" alt="">
+      <span>DARKROOM</span>
+    </div>
+  </div>
   <div class="container">
+    <aside class="xiaoxi-guide-card" aria-label="小曦暗房助手">
+      <img id="xiaoxi-guide-img" src="/xiaoxi/usual.png" alt="小曦形象">
+      <div>
+        <span>小曦暗房助手</span>
+        <p>我会陪你把这卷人格底片慢慢显影出来。</p>
+      </div>
+    </aside>
+
     <div id="start" class="page active">
-      <div class="logo">EBTI</div>
-      <p class="subtitle">Education Background Tease Inventory</p>
-      <p class="desc">学历鄙视链？全员自嘲，众生平等<br>别卷学历了，先笑完再说</p>
+      <div class="logo">EBTI 暗卷测试</div>
+      <p class="subtitle">Darkroom Contact Sheet</p>
+      <p class="ebti-fullname">Education Background Tease Inventory</p>
+      <p class="desc">小曦陪你显影一张求学状态底片</p>
       <button class="btn-primary" onclick="startTest()">开始测试</button>
+      <section class="archive-preview" aria-label="最近暗房档案">
+        <div class="archive-preview-head">
+          <span>最近暗房档案</span>
+          <small>RECENT ARCHIVE</small>
+        </div>
+        <div id="archive-list" class="archive-list">
+          <p class="archive-empty">还没有入档记录，完成一次测试后会显示在这里。</p>
+        </div>
+      </section>
       <p class="tip">本测试无任何学术价值，纯属娱乐自嘲<br>不构成任何学历评价，拒绝学历鄙视链</p>
     </div>
 
     <div id="question" class="page">
+      <div class="film-card-label">DEVELOPING QUESTION</div>
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
@@ -28,11 +58,12 @@
       <div class="options" id="options"></div>
       <div class="q-nav">
         <button class="btn-prev" id="btn-prev" onclick="prevQuestion()" style="display:none;">&#8592; 上一题</button>
+        <button class="btn-restart" onclick="restart()">重新测试</button>
       </div>
     </div>
 
     <div id="result" class="page">
-      <div class="r-badge">你的EBTI人格</div>
+      <div class="r-badge">你的人格底片已显影</div>
       <div class="r-hero">
         <img id="r-img" class="r-avatar" src="" alt="">
         <div class="r-hero-info">
@@ -44,14 +75,58 @@
       <div class="r-quote" id="r-quote"></div>
       <div class="r-content" id="r-review"></div>
       <div class="r-content" id="r-dims"></div>
+      <div id="archive-stamp" class="archive-stamp" hidden>
+        <strong>ARCHIVED</strong>
+        <span id="archive-time">入档时间 --</span>
+      </div>
       <div class="r-actions">
+        <button class="btn-primary" id="btn-archive" onclick="saveArchive()">保存到暗房档案</button>
         <button class="btn-primary" onclick="copyResult()">复制结果</button>
         <button class="btn-secondary" onclick="saveDimImage()">保存维度图</button>
-        <button class="btn-secondary" onclick="restart()">重新测试</button>
+        <button class="btn-secondary" onclick="restart()">再次测试</button>
       </div>
     </div>
   </div>
 
+  <div id="archive-modal" class="archive-modal" hidden>
+    <div class="archive-modal-card" role="dialog" aria-modal="true" aria-labelledby="archive-modal-title">
+      <button class="archive-modal-close" type="button" onclick="closeArchiveDetail()">关闭</button>
+      <div class="archive-detail-head">
+        <img id="archive-detail-img" src="" alt="">
+        <div>
+          <span id="archive-detail-type">EBTI</span>
+          <h2 id="archive-modal-title">暗房档案</h2>
+          <p id="archive-detail-time">入档时间 --</p>
+        </div>
+      </div>
+      <p id="archive-detail-quote" class="archive-detail-quote"></p>
+      <div id="archive-detail-dims" class="archive-detail-dims"></div>
+      <div class="archive-detail-actions">
+        <button class="btn-primary" type="button" onclick="openFullArchiveResult()">查看完整结果</button>
+        <button class="btn-secondary danger-soft" type="button" onclick="deleteArchiveFromDetail()">删除这条档案</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function syncXiaoxiAvatar() {
+      var avatars = {
+        usual: '/xiaoxi/usual.png',
+        happy: '/xiaoxi/happy.png',
+        comfort: '/xiaoxi/comfort.png',
+        angry: '/xiaoxi/angry.png',
+        shy: '/xiaoxi/shy.png',
+        think: '/xiaoxi/think.png',
+        naughty: '/xiaoxi/naughty.png'
+      };
+      var key = localStorage.getItem('u-life-xiaoxi-avatar-key-v1') || 'usual';
+      var src = avatars[key] || avatars.usual;
+      var guide = document.getElementById('xiaoxi-guide-img');
+      var prop = document.getElementById('xiaoxi-prop-img');
+      if (guide) guide.src = src;
+      if (prop) prop.src = src;
+    })();
+  </script>
   <script src="avatars.js"></script>
   <script src="app.js"></script>
 </body>

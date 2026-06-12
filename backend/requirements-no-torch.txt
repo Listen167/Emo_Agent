@@ -1,10 +1,12 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
+websockets>=12.0
 sqlalchemy==2.0.35
 aiosqlite==0.20.0
 pydantic-settings==2.5.2
 python-multipart==0.0.12
 openai>=1.58.0
+tencentcloud-sdk-python>=3.0.1200
 numpy==1.26.4
 edge-tts==6.1.12
 transformers==4.45.2
@@ -14,3 +16,4 @@ datasets==3.1.0
 funasr>=1.1.0
 soundfile>=0.12.1
 sentencepiece>=0.2.0
+sentence-transformers>=3.1.1

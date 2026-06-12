@@ -1,24 +1,37 @@
 <template>
   <div class="resume-workshop">
-    <header class="resume-header">
-      <div>
+    <header v-develop class="resume-header">
+      <div class="resume-header-copy">
         <span class="kodak-chip">Career Contact Sheet</span>
         <h1 class="script-title">简历工坊</h1>
         <p>把经历整理成清晰的一页纸。内容默认保存在本地，只有使用 AI 时才发送选中文本。</p>
+        <div class="resume-actions">
+          <button class="secondary-button" @click="downloadJson">导出 JSON</button>
+          <label class="secondary-button import-button">
+            导入 JSON
+            <input type="file" accept="application/json" @change="importJson" />
+          </label>
+          <button class="print-button" @click="printResume">打印 / PDF</button>
+        </div>
       </div>
-      <div class="resume-actions">
-        <button class="secondary-button" @click="downloadJson">导出 JSON</button>
-        <label class="secondary-button import-button">
-          导入 JSON
-          <input type="file" accept="application/json" @change="importJson" />
-        </label>
-        <button class="print-button" @click="printResume">打印 / PDF</button>
+      <div class="resume-desk-props" aria-hidden="true">
+        <div class="typewriter-prop">
+          <span class="typewriter-paper"></span>
+          <span class="typewriter-body"></span>
+          <span class="typewriter-keys"></span>
+        </div>
+        <div class="clipped-resume-prop">
+          <span class="paperclip"></span>
+          <span class="resume-sheet sheet-front"></span>
+          <span class="resume-sheet sheet-back"></span>
+        </div>
+        <div class="approved-stamp-prop">APPROVED</div>
       </div>
     </header>
 
     <main class="resume-layout">
       <section class="resume-editor">
-        <div class="editor-card">
+        <div v-develop="60" class="editor-card">
           <span class="washi-tape"></span>
           <div class="section-title-row">
             <h2>基础信息</h2>
@@ -59,13 +72,17 @@
             />
           </label>
           <div class="ai-row">
-            <button class="ai-button" :disabled="polishing === '个人简介'" @click="polishSummary">
+            <button
+              :class="['ai-button', { scanning: polishing === '个人简介' }]"
+              :disabled="polishing === '个人简介'"
+              @click="polishSummary"
+            >
               {{ polishing === '个人简介' ? '润色中...' : 'AI 润色简介' }}
             </button>
           </div>
         </div>
 
-        <div class="editor-card">
+        <div v-develop="90" class="editor-card">
           <div class="section-title-row">
             <h2>教育经历</h2>
             <button class="ghost-button" @click="addEducation">新增</button>
@@ -96,7 +113,7 @@
           </article>
         </div>
 
-        <div class="editor-card">
+        <div v-develop="120" class="editor-card">
           <div class="section-title-row">
             <h2>项目经历</h2>
             <button class="ghost-button" @click="addProject">新增</button>
@@ -105,7 +122,11 @@
             <div class="item-toolbar">
               <strong>{{ item.name || '未命名项目' }}</strong>
               <div>
-                <button class="small-ai-button" :disabled="polishing === item.id" @click="polishExperience(item, '项目经历')">
+                <button
+                  :class="['small-ai-button', { scanning: polishing === item.id }]"
+                  :disabled="polishing === item.id"
+                  @click="polishExperience(item, '项目经历')"
+                >
                   {{ polishing === item.id ? '润色中...' : 'AI 润色' }}
                 </button>
                 <button class="delete-button" @click="removeById(resume.projects, item.id)">删除</button>
@@ -140,7 +161,7 @@
           </article>
         </div>
 
-        <div class="editor-card">
+        <div v-develop="150" class="editor-card">
           <div class="section-title-row">
             <h2>实习 / 工作</h2>
             <button class="ghost-button" @click="addWork">新增</button>
@@ -149,7 +170,11 @@
             <div class="item-toolbar">
               <strong>{{ item.company || '未命名经历' }}</strong>
               <div>
-                <button class="small-ai-button" :disabled="polishing === item.id" @click="polishExperience(item, '实习经历')">
+                <button
+                  :class="['small-ai-button', { scanning: polishing === item.id }]"
+                  :disabled="polishing === item.id"
+                  @click="polishExperience(item, '实习经历')"
+                >
                   {{ polishing === item.id ? '润色中...' : 'AI 润色' }}
                 </button>
                 <button class="delete-button" @click="removeById(resume.work, item.id)">删除</button>
@@ -180,7 +205,7 @@
           </article>
         </div>
 
-        <div class="editor-card">
+        <div v-develop="180" class="editor-card">
           <div class="section-title-row">
             <h2>技能与荣誉</h2>
           </div>
@@ -194,7 +219,7 @@
           </label>
         </div>
 
-        <div class="editor-card">
+        <div v-develop="210" class="editor-card">
           <div class="section-title-row">
             <h2>岗位适配</h2>
             <button class="ghost-button" :disabled="analyzing" @click="analyzeMatch">
@@ -214,9 +239,53 @@
             <p>{{ analysisResult }}</p>
           </div>
         </div>
+
+        <div v-develop="240" class="editor-card">
+          <div class="section-title-row">
+            <h2>简历评分</h2>
+            <button class="ghost-button" @click="scoreResume">重新评分</button>
+          </div>
+          <div class="score-panel">
+            <div
+              class="score-dial"
+              :style="{ '--score-angle': `${Math.round(resumeScore.total * 1.8 - 90)}deg` }"
+            >
+              <i aria-hidden="true"></i>
+              <strong>{{ resumeScore.total }}</strong>
+              <span>/ 100</span>
+            </div>
+            <div class="score-bars">
+              <div v-for="item in resumeScore.items" :key="item.label" class="score-row">
+                <span>{{ item.label }}</span>
+                <i><b :style="{ width: `${item.value}%` }"></b></i>
+                <em>{{ item.value }}</em>
+              </div>
+            </div>
+          </div>
+          <div class="score-suggestions">
+            <p v-for="tip in resumeScore.tips" :key="tip">{{ tip }}</p>
+          </div>
+        </div>
+
+        <div v-develop="270" class="editor-card">
+          <div class="section-title-row">
+            <h2>面试模拟</h2>
+            <button class="ghost-button" @click="generateInterview">生成问题</button>
+          </div>
+          <label class="field">
+            <span>目标岗位</span>
+            <input v-model="interviewRole" class="input" placeholder="例如：前端开发实习生 / AI 产品实习生" />
+          </label>
+          <div class="interview-list">
+            <article v-for="(question, index) in interviewQuestions" :key="question" class="interview-item">
+              <span>Q{{ index + 1 }}</span>
+              <p>{{ question }}</p>
+            </article>
+          </div>
+        </div>
       </section>
 
-      <aside class="resume-preview-panel">
+      <aside v-develop="120" class="resume-preview-panel">
         <div class="preview-toolbar">
           <span>LIVE PREVIEW</span>
           <button class="ghost-button" @click="clearResume">清空</button>
@@ -300,6 +369,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 
 import { analyzeResumeMatch, polishResumeText } from '../api/resume'
+import { createClientId } from '../utils/id'
 
 interface Basics {
   name: string
@@ -380,7 +450,7 @@ const demoResume = (): ResumeData => ({
   },
   education: [
     {
-      id: crypto.randomUUID(),
+      id: createClientId(),
       school: '广东工业大学',
       major: '计算机科学与技术',
       period: '2022.09 - 2026.06',
@@ -389,7 +459,7 @@ const demoResume = (): ResumeData => ({
   ],
   projects: [
     {
-      id: crypto.randomUUID(),
+      id: createClientId(),
       name: 'Emo Agent 情绪陪伴系统',
       role: '核心开发',
       period: '2026.03 - 至今',
@@ -404,7 +474,7 @@ const demoResume = (): ResumeData => ({
 
 function newEducation(): Education {
   return {
-    id: crypto.randomUUID(),
+    id: createClientId(),
     school: '',
     major: '',
     period: '',
@@ -414,7 +484,7 @@ function newEducation(): Education {
 
 function newProject(): Project {
   return {
-    id: crypto.randomUUID(),
+    id: createClientId(),
     name: '',
     role: '',
     period: '',
@@ -425,7 +495,7 @@ function newProject(): Project {
 
 function newWork(): Work {
   return {
-    id: crypto.randomUUID(),
+    id: createClientId(),
     company: '',
     position: '',
     period: '',
@@ -439,9 +509,9 @@ const normalizeResume = (value: Partial<ResumeData> | null): ResumeData => {
   if (!value || typeof value !== 'object') return fallback
   return {
     basics: { ...fallback.basics, ...(value.basics || {}) },
-    education: Array.isArray(value.education) && value.education.length ? value.education.map(item => ({ ...newEducation(), ...item, id: item.id || crypto.randomUUID() })) : fallback.education,
-    projects: Array.isArray(value.projects) && value.projects.length ? value.projects.map(item => ({ ...newProject(), ...item, id: item.id || crypto.randomUUID() })) : fallback.projects,
-    work: Array.isArray(value.work) ? value.work.map(item => ({ ...newWork(), ...item, id: item.id || crypto.randomUUID() })) : fallback.work,
+    education: Array.isArray(value.education) && value.education.length ? value.education.map(item => ({ ...newEducation(), ...item, id: item.id || createClientId() })) : fallback.education,
+    projects: Array.isArray(value.projects) && value.projects.length ? value.projects.map(item => ({ ...newProject(), ...item, id: item.id || createClientId() })) : fallback.projects,
+    work: Array.isArray(value.work) ? value.work.map(item => ({ ...newWork(), ...item, id: item.id || createClientId() })) : fallback.work,
     skills: typeof value.skills === 'string' ? value.skills : fallback.skills,
     awards: typeof value.awards === 'string' ? value.awards : fallback.awards,
   }
@@ -462,6 +532,18 @@ const jobDescription = ref('')
 const analysisResult = ref('')
 const polishing = ref<string | null>(null)
 const analyzing = ref(false)
+const interviewRole = ref('前端开发实习生')
+const interviewQuestions = ref<string[]>([])
+const resumeScore = reactive({
+  total: 0,
+  items: [
+    { label: '完整度', value: 0 },
+    { label: '项目表达', value: 0 },
+    { label: '岗位匹配', value: 0 },
+    { label: '量化结果', value: 0 },
+  ],
+  tips: ['点击重新评分，生成一份本地可演示的简历诊断。'],
+})
 
 watch(
   resume,
@@ -597,6 +679,61 @@ const analyzeMatch = async () => {
   }
 }
 
+const scoreResume = () => {
+  const resumeText = buildResumeText()
+  const hasContact = Boolean(resume.basics.phone.trim() && resume.basics.email.trim())
+  const hasSummary = resume.basics.summary.trim().length >= 40
+  const hasEducation = visibleEducation.value.length > 0
+  const hasProject = visibleProjects.value.length > 0
+  const hasSkills = skillList.value.length >= 4
+  const completeness = [hasContact, hasSummary, hasEducation, hasProject, hasSkills].filter(Boolean).length * 20
+
+  const projectText = resume.projects.map(item => item.description).join('\n')
+  const actionWords = ['负责', '设计', '实现', '优化', '接入', '提升', '完成', '搭建', '分析']
+  const actionScore = Math.min(100, actionWords.filter(word => projectText.includes(word)).length * 14 + visibleProjects.value.length * 12)
+
+  const jd = jobDescription.value.trim()
+  const jdKeywords = splitTags(jd.replace(/[，。；、\s]+/g, ',')).filter(word => word.length >= 2)
+  const matchedKeywords = jdKeywords.filter(word => resumeText.includes(word)).length
+  const matchScore = jdKeywords.length ? Math.min(100, Math.round((matchedKeywords / jdKeywords.length) * 100)) : Math.min(100, skillList.value.length * 10 + visibleProjects.value.length * 16)
+
+  const quantified = (resumeText.match(/\d+|%|百分比|提升|降低|增长|用户|请求|并发/g) || []).length
+  const quantityScore = Math.min(100, quantified * 12)
+
+  resumeScore.items = [
+    { label: '完整度', value: completeness },
+    { label: '项目表达', value: actionScore },
+    { label: '岗位匹配', value: matchScore },
+    { label: '量化结果', value: quantityScore },
+  ]
+  resumeScore.total = Math.round(resumeScore.items.reduce((sum, item) => sum + item.value, 0) / resumeScore.items.length)
+
+  const tips: string[] = []
+  if (completeness < 80) tips.push('补齐联系方式、个人简介、教育经历、项目经历和技能标签，先保证基础完整。')
+  if (actionScore < 70) tips.push('项目经历建议用“动作 + 技术 + 结果”表达，例如：设计并实现某模块，提升某指标。')
+  if (matchScore < 70) tips.push('把目标 JD 里的关键词同步到技能、项目和个人简介中，但不要堆砌。')
+  if (quantityScore < 60) tips.push('增加量化结果，例如响应时间、准确率、用户数、代码量、效率提升比例。')
+  if (tips.length === 0) tips.push('整体结构已经比较完整，可以继续针对具体岗位做关键词和面试问答优化。')
+  resumeScore.tips = tips
+}
+
+const generateInterview = () => {
+  const role = interviewRole.value.trim() || resume.basics.headline || '目标岗位'
+  const firstProject = visibleProjects.value[0]
+  const projectName = firstProject?.name || '你的代表项目'
+  const stack = firstProject?.stack || resume.skills || '你的技术栈'
+  interviewQuestions.value = [
+    `请用 1 分钟介绍自己，并说明你为什么适合${role}。`,
+    `你在「${projectName}」中承担了什么角色？最难的问题是什么？`,
+    `项目中使用了 ${stack}，你如何权衡技术选型？`,
+    '如果让你重新做一次这个项目，你会优先优化哪一部分？为什么？',
+    '请举一个你面对压力或不确定需求时推进任务的例子。',
+    jobDescription.value.trim()
+      ? '结合目标 JD，你认为自己最匹配的三项能力是什么？还有什么短板？'
+      : '如果面试官追问项目结果，你会用哪些数据证明价值？',
+  ]
+}
+
 const buildResumeText = () => {
   const lines = [
     resume.basics.name,
@@ -626,6 +763,9 @@ const splitTags = (value: string) =>
 
 const joinParts = (parts: Array<string | undefined | null>) =>
   parts.map(part => (part || '').trim()).filter(Boolean).join(' · ')
+
+scoreResume()
+generateInterview()
 </script>
 
 <style scoped>
@@ -638,11 +778,17 @@ const joinParts = (parts: Array<string | undefined | null>) =>
   position: relative;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 20px;
   padding: 24px 28px;
   border: 1px solid rgb(62 50 40 / 16%);
   background: rgb(255 248 232 / 72%);
   box-shadow: 0 16px 38px rgb(62 50 40 / 12%);
+}
+
+.resume-header-copy {
+  min-width: 0;
+  flex: 1;
 }
 
 .resume-header h1 {
@@ -668,12 +814,151 @@ const joinParts = (parts: Array<string | undefined | null>) =>
 }
 
 .resume-actions {
-  align-self: center;
+  width: fit-content;
+  margin-top: 14px;
+  padding: 7px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-  min-width: 280px;
+  gap: 8px;
+  border: 1px solid rgb(62 50 40 / 12%);
+  border-radius: 14px;
+  background: rgb(253 251 247 / 54%);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 62%);
+}
+
+.resume-desk-props {
+  position: relative;
+  flex: 0 0 230px;
+  width: 230px;
+  height: 130px;
+}
+
+.typewriter-prop {
+  position: absolute;
+  right: 8px;
+  bottom: 5px;
+  width: 124px;
+  height: 88px;
+  transform: rotate(-2deg);
+}
+
+.typewriter-paper {
+  position: absolute;
+  left: 34px;
+  top: 0;
+  width: 58px;
+  height: 48px;
+  border: 1px solid rgb(62 50 40 / 14%);
+  background: rgb(253 251 247 / 94%);
+  box-shadow: 0 5px 10px rgb(62 50 40 / 8%);
+}
+
+.typewriter-paper::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  top: 13px;
+  height: 2px;
+  background: rgb(62 50 40 / 18%);
+  box-shadow: 0 9px 0 rgb(62 50 40 / 14%), 0 18px 0 rgb(62 50 40 / 10%);
+}
+
+.typewriter-body {
+  position: absolute;
+  left: 8px;
+  right: 6px;
+  bottom: 0;
+  height: 50px;
+  border: 1px solid rgb(62 50 40 / 18%);
+  border-radius: 16px 16px 10px 10px;
+  background: linear-gradient(145deg, #4b3525, #1a120d);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 18%), 0 12px 24px rgb(62 50 40 / 18%);
+}
+
+.typewriter-keys {
+  position: absolute;
+  left: 24px;
+  right: 22px;
+  bottom: 12px;
+  height: 16px;
+  background:
+    radial-gradient(circle, #fff8e8 0 3px, transparent 3px) 0 0 / 14px 8px repeat;
+  animation: typewriterKeys 1.5s steps(2, end) infinite;
+}
+
+.clipped-resume-prop {
+  position: absolute;
+  left: 8px;
+  bottom: 18px;
+  width: 88px;
+  height: 98px;
+  transform: rotate(5deg);
+}
+
+.resume-sheet {
+  position: absolute;
+  width: 70px;
+  height: 88px;
+  border: 1px solid rgb(62 50 40 / 14%);
+  background: rgb(253 251 247 / 94%);
+  box-shadow: 0 10px 18px rgb(62 50 40 / 12%);
+}
+
+.sheet-back {
+  left: 10px;
+  top: 5px;
+  background: rgb(255 248 232 / 92%);
+}
+
+.sheet-front {
+  left: 0;
+  top: 0;
+  z-index: 2;
+}
+
+.sheet-front::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 20px;
+  height: 3px;
+  background: rgb(62 50 40 / 20%);
+  box-shadow:
+    0 14px 0 rgb(62 50 40 / 14%),
+    0 28px 0 rgb(62 50 40 / 12%),
+    0 42px 0 rgb(62 50 40 / 10%);
+}
+
+.paperclip {
+  position: absolute;
+  z-index: 4;
+  left: 9px;
+  top: -8px;
+  width: 18px;
+  height: 36px;
+  border: 3px solid var(--journal-stamp);
+  border-left-width: 2px;
+  border-radius: 999px;
+  transform: rotate(-18deg);
+}
+
+.approved-stamp-prop {
+  position: absolute;
+  right: 78px;
+  bottom: 12px;
+  z-index: 5;
+  padding: 7px 10px;
+  border: 2px solid var(--journal-stamp);
+  border-radius: 8px;
+  color: var(--journal-stamp);
+  background: rgb(255 248 232 / 58%);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  transform: rotate(-10deg);
+  opacity: 0.74;
 }
 
 .secondary-button,
@@ -699,15 +984,30 @@ const joinParts = (parts: Array<string | undefined | null>) =>
 
 .print-button,
 .ai-button {
+  position: relative;
+  overflow: hidden;
   color: #fff8e8;
   background: linear-gradient(145deg, #4b3525, #1a120d);
   box-shadow: 0 10px 20px rgb(62 50 40 / 16%);
 }
 
 .small-ai-button {
+  position: relative;
+  overflow: hidden;
   margin-right: 8px;
   color: #fff8e8;
   background: var(--journal-stamp);
+}
+
+.ai-button.scanning::after,
+.small-ai-button.scanning::after {
+  content: "";
+  position: absolute;
+  inset: -30% auto -30% -42%;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, rgb(255 248 232 / 52%), transparent);
+  transform: skewX(-18deg);
+  animation: aiScanline 0.82s ease-in-out infinite;
 }
 
 .delete-button {
@@ -871,6 +1171,187 @@ textarea.input {
   line-height: 1.7;
 }
 
+.score-panel {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.score-dial {
+  position: relative;
+  overflow: hidden;
+  width: 124px;
+  height: 124px;
+  display: grid;
+  place-items: center;
+  border: 8px solid #f5e8ce;
+  border-radius: 999px;
+  color: #fff8e8;
+  background: radial-gradient(circle at center, #3e3228 0 34%, #20150f 35% 100%);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 18%), 0 12px 26px rgb(62 50 40 / 18%);
+}
+
+.score-dial::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: inherit;
+  background:
+    conic-gradient(from 270deg, var(--journal-kodak) 0 180deg, transparent 180deg 360deg),
+    repeating-conic-gradient(from 270deg, rgb(255 248 232 / 42%) 0deg 2deg, transparent 2deg 12deg);
+  mask: radial-gradient(circle, transparent 0 55%, #000 56% 100%);
+  animation: gaugeWarmup 0.9s ease-out both;
+}
+
+.score-dial::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 17px;
+  width: 2px;
+  height: 44px;
+  border-radius: 999px;
+  background: #f7d66c;
+  box-shadow: 0 0 10px rgb(247 214 108 / 50%);
+  transform-origin: 50% 45px;
+  transform: translateX(-50%) rotate(var(--score-angle));
+  transition: transform 0.55s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.score-dial i {
+  position: absolute;
+  left: 50%;
+  top: 57px;
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #fff8e8;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 4px rgb(62 50 40 / 32%);
+}
+
+.score-dial strong,
+.score-dial span {
+  position: relative;
+  z-index: 3;
+  display: block;
+  line-height: 1;
+}
+
+.score-dial strong {
+  align-self: end;
+  font-size: 42px;
+}
+
+.score-dial span {
+  align-self: start;
+  color: rgb(255 248 232 / 78%);
+  font-size: 12px;
+}
+
+.score-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 36px;
+  gap: 10px;
+  align-items: center;
+  color: var(--journal-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.score-row i {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(62 50 40 / 10%);
+}
+
+.score-row b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--journal-stamp), var(--journal-kodak));
+  transition: width 0.35s ease;
+}
+
+.score-row em {
+  color: var(--journal-ink);
+  font-style: normal;
+  text-align: right;
+}
+
+.score-suggestions,
+.interview-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.score-suggestions p,
+.interview-item {
+  margin: 0;
+  padding: 11px 13px;
+  border-left: 4px solid var(--journal-stamp);
+  background: rgb(253 251 247 / 66%);
+  color: var(--journal-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.interview-item {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  border-left-color: var(--journal-kodak);
+}
+
+@keyframes aiScanline {
+  to {
+    transform: translateX(340%) skewX(-18deg);
+  }
+}
+
+@keyframes gaugeWarmup {
+  from {
+    opacity: 0.2;
+    transform: rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0);
+  }
+}
+
+@keyframes typewriterKeys {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(1px);
+  }
+}
+
+.interview-item span {
+  color: var(--journal-stamp);
+  font-weight: 700;
+}
+
+.interview-item p {
+  margin: 0;
+  color: var(--journal-ink);
+}
+
 .resume-preview-panel {
   position: sticky;
   top: 24px;
@@ -997,6 +1478,16 @@ textarea.input {
 }
 
 @media (max-width: 1180px) {
+  .resume-header {
+    align-items: flex-start;
+  }
+
+  .resume-desk-props {
+    flex-basis: 190px;
+    transform: scale(0.88);
+    transform-origin: right top;
+  }
+
   .resume-layout {
     display: block;
   }
@@ -1024,6 +1515,10 @@ textarea.input {
     margin-top: 16px;
   }
 
+  .resume-desk-props {
+    display: none;
+  }
+
   .two-columns {
     grid-template-columns: 1fr;
   }
@@ -1040,6 +1535,10 @@ textarea.input {
   .contact-list {
     margin-top: 12px;
     text-align: left;
+  }
+
+  .score-panel {
+    grid-template-columns: 1fr;
   }
 }
 

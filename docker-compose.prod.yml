@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.cpu
+    container_name: emo-agent-backend
+    env_file:
+      - ./backend/.env
+    environment:
+      TTS_PROVIDER: tencent
+      ASR_DEVICE: cpu
+      RAG_ENABLED: "false"
+    volumes:
+      - ./backend/data:/app/backend/data
+      - ./models:/app/models:ro
+      - ./knowledge:/app/knowledge:ro
+    restart: unless-stopped
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+        VITE_BACKEND_ORIGIN: ""
+    container_name: emo-agent-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    restart: unless-stopped

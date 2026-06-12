@@ -1,19 +1,19 @@
 <template>
   <div class="mood-journal">
-    <header class="mood-header">
+    <header v-develop class="mood-header">
       <div>
         <span class="kodak-chip">Exposure Log</span>
         <h1 class="script-title">拍摄记录</h1>
         <p>查看曝光曲线，重温拍摄那一刻的 Sunny 26°C。</p>
       </div>
       <div class="meter-dial">
+        <span class="meter-needle" aria-hidden="true"></span>
         <span>ISO</span>
-        <strong>400</strong>
       </div>
     </header>
 
     <main class="mood-layout">
-      <section class="calendar-card">
+      <section v-develop="80" class="calendar-card">
         <span class="washi-tape"></span>
         <div class="calendar-toolbar">
           <div>
@@ -58,12 +58,12 @@
       </section>
 
       <section class="stats-board">
-        <div class="stat-card count-card">
+        <div v-develop="120" class="stat-card count-card">
           <span>SHOT COUNT</span>
           <strong>{{ summary?.total_count || 0 }}</strong>
           <p>当月记录数</p>
         </div>
-        <div class="stat-card distribution-card">
+        <div v-develop="160" class="stat-card distribution-card">
           <span>EMOTION CONTACT SHEET</span>
           <div class="mood-pills">
             <span v-for="item in moodStats" :key="item.label">
@@ -81,6 +81,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { getMoodCalendar, type MoodDay, type MoodSummary } from '../api/mood'
+import { createClientId } from '../utils/id'
 
 interface CalendarCell {
   key: string
@@ -90,7 +91,7 @@ interface CalendarCell {
   mood?: MoodDay
 }
 
-const sid = ref(localStorage.getItem('sid') || crypto.randomUUID())
+const sid = ref(localStorage.getItem('sid') || createClientId())
 const now = new Date()
 const selectedYear = ref(now.getFullYear())
 const selectedMonth = ref(now.getMonth() + 1)
@@ -233,6 +234,8 @@ const tooltip = (cell: CalendarCell) => {
 }
 
 .meter-dial {
+  position: relative;
+  overflow: hidden;
   width: 112px;
   height: 112px;
   align-self: center;
@@ -245,20 +248,90 @@ const tooltip = (cell: CalendarCell) => {
   box-shadow: inset 0 0 0 2px rgb(255 255 255 / 18%), 0 12px 26px rgb(62 50 40 / 22%);
 }
 
+.meter-dial::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: inherit;
+  background:
+    repeating-conic-gradient(from 0deg, rgb(255 255 255 / 12%) 0deg 2deg, transparent 2deg 9deg),
+    radial-gradient(circle at center, transparent 0 24%, rgb(255 255 255 / 8%) 25% 26%, transparent 27% 100%);
+  animation: meterRecordSpin 7.5s linear infinite;
+}
+
+.meter-dial::after {
+  content: "";
+  position: absolute;
+  inset: 37px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #f5e8ce 0 18%, #3e3228 19% 44%, #120c09 45% 100%);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 22%),
+    0 0 0 1px rgb(255 255 255 / 18%);
+}
+
+.meter-dial:hover::before {
+  animation-duration: 3.8s;
+}
+
 .meter-dial span,
 .meter-dial strong {
+  position: relative;
+  z-index: 2;
   display: block;
   text-align: center;
 }
 
+.meter-needle {
+  position: absolute !important;
+  z-index: 3 !important;
+  left: 50%;
+  top: 13px;
+  width: 2px;
+  height: 40px;
+  border-radius: 999px;
+  background: #f7d66c;
+  box-shadow: 0 0 10px rgb(247 214 108 / 56%);
+  transform-origin: 50% 42px;
+  animation: exposureNeedle 3.8s ease-in-out infinite;
+}
+
+.meter-needle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fff8e8;
+  transform: translateX(-50%);
+}
+
 .meter-dial span {
-  align-self: end;
   font-size: 11px;
+  letter-spacing: 0.08em;
 }
 
 .meter-dial strong {
   align-self: start;
   font-size: 28px;
+}
+
+@keyframes meterRecordSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes exposureNeedle {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(-18deg);
+  }
+  50% {
+    transform: translateX(-50%) rotate(20deg);
+  }
 }
 
 .mood-layout {
@@ -350,17 +423,41 @@ const tooltip = (cell: CalendarCell) => {
 }
 
 .calendar-cell {
+  position: relative;
+  overflow: hidden;
   min-height: 42px;
   display: grid;
   place-items: center;
   border: 1px solid rgb(62 50 40 / 14%);
   border-radius: 8px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.calendar-cell::after {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  background: radial-gradient(circle, rgb(255 248 232 / 82%) 0 18%, transparent 48%);
+  opacity: 0;
+  transform: scale(0.72);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  pointer-events: none;
 }
 
 .calendar-cell:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgb(62 50 40 / 14%);
+  filter: saturate(1.08);
+  box-shadow: 0 8px 18px rgb(62 50 40 / 14%), inset 0 0 0 2px rgb(255 248 232 / 58%);
+}
+
+.calendar-cell:hover::after {
+  opacity: 0.72;
+  transform: scale(1);
+}
+
+.calendar-cell span {
+  position: relative;
+  z-index: 1;
 }
 
 .empty-cell {
@@ -494,6 +591,13 @@ const tooltip = (cell: CalendarCell) => {
 
   .stats-board {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter-dial::before,
+  .meter-needle {
+    animation: none !important;
   }
 }
 </style>

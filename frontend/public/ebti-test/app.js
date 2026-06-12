@@ -213,6 +213,9 @@ var dimLabels = {
 var currentQ = 0;
 var dimScores = { 1: {}, 2: {}, 3: {}, 4: {} };
 var answerHistory = [];
+var currentResultArchive = null;
+var activeArchiveId = null;
+var ARCHIVE_KEY = 'u-life-ebti-archive-v1';
 
 function resetScores() {
   for (var d = 1; d <= 4; d++) {
@@ -255,6 +258,7 @@ function clearState() {
 function showPage(id) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
+  if (id === 'start') renderArchiveList();
 }
 
 function startTest() {
@@ -338,6 +342,27 @@ function renderHTML(container, str) {
     }
     container.appendChild(document.createTextNode(part));
   });
+}
+
+function syncEbtiResult(type, result) {
+  var payload = {
+    source: 'ebti-test',
+    event: 'ebti-result',
+    ebti_type: type,
+    ebti_name: result.name,
+    ebti_avatar: result.img ? '/ebti-test/png/' + encodeURIComponent(result.img) : null,
+    ebti_quote: result.quote
+  };
+
+  try {
+    localStorage.setItem('ebti_first_result', JSON.stringify(payload));
+  } catch (e) {}
+
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(payload, window.location.origin);
+    }
+  } catch (e) {}
 }
 
 function showResult() {
@@ -466,8 +491,346 @@ function showResult() {
     dimsEl.appendChild(svgWrap);
   }
 
+  currentResultArchive = buildArchiveEntry(type, r);
+  resetArchiveButton();
   clearState();
+  syncEbtiResult(type, r);
   showPage('result');
+}
+
+function buildArchiveEntry(type, result) {
+  var pctMap = {};
+  for (var d = 1; d <= 4; d++) {
+    var pair = dimPairs[d];
+    var total = dimScores[d][pair[0]] + dimScores[d][pair[1]];
+    pctMap[pair[0]] = total ? Math.round(dimScores[d][pair[0]] / total * 100) : 0;
+    pctMap[pair[1]] = 100 - pctMap[pair[0]];
+  }
+
+  return {
+    id: Date.now().toString(36),
+    type: type,
+    name: result.name,
+    quote: result.quote,
+    img: result.img,
+    dims: pctMap,
+    answers: answerHistory.map(function(ans, i) {
+      var q = questions[i];
+      var option = q && q.options ? q.options.find(function(o) { return o.val === ans.val; }) : null;
+      return {
+        index: i + 1,
+        text: option ? option.text : ''
+      };
+    }),
+    createdAt: new Date().toISOString()
+  };
+}
+
+function loadArchive() {
+  try {
+    var raw = localStorage.getItem(ARCHIVE_KEY);
+    var parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveArchiveStore(items) {
+  try {
+    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(items.slice(0, 12)));
+  } catch (e) {}
+}
+
+function formatArchiveTime(value) {
+  var date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value || '';
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(date);
+}
+
+function resetArchiveButton() {
+  var stamp = document.getElementById('archive-stamp');
+  var button = document.getElementById('btn-archive');
+  if (stamp) stamp.hidden = true;
+  if (button) {
+    button.disabled = false;
+    button.textContent = '保存到暗房档案';
+  }
+}
+
+function saveArchive() {
+  if (!currentResultArchive) return;
+  var archive = loadArchive();
+  var exists = archive.some(function(item) {
+    return item.type === currentResultArchive.type &&
+      item.name === currentResultArchive.name &&
+      Math.abs(new Date(item.createdAt).getTime() - new Date(currentResultArchive.createdAt).getTime()) < 2000;
+  });
+  if (!exists) {
+    archive.unshift(currentResultArchive);
+    saveArchiveStore(archive);
+  }
+
+  var stamp = document.getElementById('archive-stamp');
+  var time = document.getElementById('archive-time');
+  var button = document.getElementById('btn-archive');
+  if (time) time.textContent = '入档时间 ' + formatArchiveTime(currentResultArchive.createdAt);
+  if (stamp) stamp.hidden = false;
+  if (button) {
+    button.disabled = true;
+    button.textContent = '已收入暗房档案';
+  }
+  renderArchiveList();
+  showToast('已收入暗房档案');
+}
+
+function renderArchiveList() {
+  var list = document.getElementById('archive-list');
+  if (!list) return;
+  var archive = loadArchive().slice(0, 3);
+  list.innerHTML = '';
+  if (!archive.length) {
+    var empty = document.createElement('p');
+    empty.className = 'archive-empty';
+    empty.textContent = '还没有入档记录，完成一次测试后会显示在这里。';
+    list.appendChild(empty);
+    return;
+  }
+
+  archive.forEach(function(item) {
+    var card = document.createElement('article');
+    card.className = 'archive-mini-card';
+    var badge = document.createElement('span');
+    badge.textContent = item.type;
+    var main = document.createElement('div');
+    var title = document.createElement('strong');
+    title.textContent = item.name;
+    var meta = document.createElement('small');
+    meta.textContent = formatArchiveTime(item.createdAt);
+    main.appendChild(title);
+    main.appendChild(meta);
+    var tools = document.createElement('div');
+    tools.className = 'archive-mini-tools';
+    var viewBtn = document.createElement('button');
+    viewBtn.type = 'button';
+    viewBtn.textContent = '查看';
+    viewBtn.onclick = function() { openArchiveDetail(item.id); };
+    var deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = '删除';
+    deleteBtn.className = 'danger';
+    deleteBtn.onclick = function() { deleteArchive(item.id); };
+    tools.appendChild(viewBtn);
+    tools.appendChild(deleteBtn);
+    card.appendChild(badge);
+    card.appendChild(main);
+    card.appendChild(tools);
+    list.appendChild(card);
+  });
+}
+
+function openArchiveDetail(id) {
+  var archive = loadArchive();
+  var item = archive.find(function(entry) { return entry.id === id; });
+  if (!item) return;
+  activeArchiveId = id;
+
+  var modal = document.getElementById('archive-modal');
+  var img = document.getElementById('archive-detail-img');
+  var type = document.getElementById('archive-detail-type');
+  var title = document.getElementById('archive-modal-title');
+  var time = document.getElementById('archive-detail-time');
+  var quote = document.getElementById('archive-detail-quote');
+  var dims = document.getElementById('archive-detail-dims');
+
+  if (img) {
+    img.src = item.img ? 'png/' + encodeURIComponent(item.img) : '';
+    img.alt = item.name || 'EBTI 档案头像';
+  }
+  if (type) type.textContent = item.type || 'EBTI';
+  if (title) title.textContent = item.name || '暗房档案';
+  if (time) time.textContent = '入档时间 ' + formatArchiveTime(item.createdAt);
+  if (quote) quote.textContent = item.quote || '';
+  if (dims) {
+    dims.innerHTML = '';
+    Object.entries(item.dims || {}).slice(0, 8).forEach(function(pair) {
+      var chip = document.createElement('span');
+      chip.textContent = pair[0] + ' ' + pair[1] + '%';
+      dims.appendChild(chip);
+    });
+  }
+  if (modal) modal.hidden = false;
+}
+
+function closeArchiveDetail() {
+  var modal = document.getElementById('archive-modal');
+  if (modal) modal.hidden = true;
+  activeArchiveId = null;
+}
+
+function deleteArchive(id) {
+  var archive = loadArchive();
+  var next = archive.filter(function(item) { return item.id !== id; });
+  saveArchiveStore(next);
+  renderArchiveList();
+  if (activeArchiveId === id) closeArchiveDetail();
+  showToast('已删除暗房档案');
+}
+
+function deleteArchiveFromDetail() {
+  if (!activeArchiveId) return;
+  deleteArchive(activeArchiveId);
+}
+
+function openFullArchiveResult() {
+  if (!activeArchiveId) return;
+  var archive = loadArchive();
+  var item = archive.find(function(entry) { return entry.id === activeArchiveId; });
+  if (!item) return;
+  renderArchiveAsResult(item);
+  closeArchiveDetail();
+  showPage('result');
+}
+
+function renderArchiveAsResult(item) {
+  var result = results[item.type] || {};
+  document.getElementById('r-type').textContent = item.type || 'EBTI';
+  document.getElementById('r-name').textContent = item.name || result.name || '暗房档案';
+  var imgEl = document.getElementById('r-img');
+  if (imgEl) {
+    imgEl.src = item.img ? 'png/' + encodeURIComponent(item.img) : '';
+    imgEl.alt = item.name || 'EBTI 档案头像';
+  }
+  renderHTML(document.getElementById('r-desc'), result.desc || '这是一条早期保存的暗房档案，暂无完整描述。');
+  document.getElementById('r-quote').textContent = item.quote || result.quote || '';
+
+  var reviewEl = document.getElementById('r-review');
+  if (reviewEl) {
+    reviewEl.innerHTML = '';
+    var heading = document.createElement('p');
+    heading.className = 'review-heading';
+    heading.textContent = '你的答题回顾';
+    reviewEl.appendChild(heading);
+    if (Array.isArray(item.answers) && item.answers.length) {
+      item.answers.forEach(function(ans) {
+        var row = document.createElement('div');
+        row.className = 'review-row';
+        var num = document.createElement('span');
+        num.className = 'review-num';
+        num.textContent = ans.index + '.';
+        var text = document.createElement('span');
+        text.className = 'review-text';
+        text.textContent = ans.text;
+        row.appendChild(num);
+        row.appendChild(text);
+        reviewEl.appendChild(row);
+      });
+    } else {
+      var empty = document.createElement('div');
+      empty.className = 'review-row';
+      empty.textContent = '该档案未保存答题回顾。';
+      reviewEl.appendChild(empty);
+    }
+  }
+
+  renderArchiveDimsAsResult(item.dims || {});
+
+  var stamp = document.getElementById('archive-stamp');
+  var time = document.getElementById('archive-time');
+  var button = document.getElementById('btn-archive');
+  if (time) time.textContent = '入档时间 ' + formatArchiveTime(item.createdAt);
+  if (stamp) stamp.hidden = false;
+  if (button) {
+    button.disabled = true;
+    button.textContent = '已收入暗房档案';
+  }
+  currentResultArchive = item;
+}
+
+function renderArchiveDimsAsResult(dims) {
+  var dimsEl = document.getElementById('r-dims');
+  if (!dimsEl) return;
+  dimsEl.innerHTML = '';
+  var dimsHeading = document.createElement('p');
+  dimsHeading.className = 'review-heading';
+  dimsHeading.textContent = '维度评分';
+  dimsEl.appendChild(dimsHeading);
+
+  var dimAxes = [
+    { key: "A", label: "进取" },
+    { key: "P", label: "攀比" },
+    { key: "T", label: "执念" },
+    { key: "I", label: "内耗" },
+    { key: "E", label: "求稳" },
+    { key: "B", label: "看淡" },
+    { key: "N", label: "脱敏" },
+    { key: "O", label: "通透" }
+  ];
+  var cx = 155, cy = 148, radius = 90;
+  var svg = '';
+
+  [0.33, 0.67, 1].forEach(function(level) {
+    var pts = [];
+    for (var i = 0; i < 8; i++) {
+      var a = (i * Math.PI / 4) - Math.PI / 2;
+      pts.push((cx + radius * level * Math.cos(a)).toFixed(1) + ',' + (cy + radius * level * Math.sin(a)).toFixed(1));
+    }
+    svg += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="' + (level === 1 ? '#d1cfc5' : '#e8e6dc') + '" stroke-width="1"/>';
+  });
+
+  for (var i = 0; i < 8; i++) {
+    var a = (i * Math.PI / 4) - Math.PI / 2;
+    var ex = cx + radius * Math.cos(a);
+    var ey = cy + radius * Math.sin(a);
+    svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ex.toFixed(1) + '" y2="' + ey.toFixed(1) + '" stroke="#e8e6dc" stroke-width="1"/>';
+  }
+
+  var dataPts = [];
+  for (var i = 0; i < 8; i++) {
+    var pct = Math.max(Number(dims[dimAxes[i].key]) || 8, 8) / 100;
+    var a = (i * Math.PI / 4) - Math.PI / 2;
+    dataPts.push((cx + radius * pct * Math.cos(a)).toFixed(1) + ',' + (cy + radius * pct * Math.sin(a)).toFixed(1));
+  }
+  svg += '<polygon points="' + dataPts.join(' ') + '" fill="rgba(201,100,66,0.15)" stroke="#c96442" stroke-width="2" stroke-linejoin="round"/>';
+
+  for (var i = 0; i < 8; i++) {
+    var pctValue = Number(dims[dimAxes[i].key]) || 0;
+    var pct = Math.max(pctValue, 8) / 100;
+    var a = (i * Math.PI / 4) - Math.PI / 2;
+    var px = cx + radius * pct * Math.cos(a);
+    var py = cy + radius * pct * Math.sin(a);
+    svg += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="3.5" fill="#c96442"/>';
+  }
+
+  for (var i = 0; i < 8; i++) {
+    var a = (i * Math.PI / 4) - Math.PI / 2;
+    var cosA = Math.cos(a);
+    var sinA = Math.sin(a);
+    var labelR = radius + 24;
+    var lx = cx + labelR * cosA;
+    var ly = cy + labelR * sinA;
+    var anchor = 'middle';
+    var dy1 = 5;
+    var dx = 0;
+    if (cosA > 0.3) { anchor = 'start'; dx = 4; }
+    else if (cosA < -0.3) { anchor = 'end'; dx = -4; }
+    if (sinA < -0.7) { dy1 = -5; }
+    else if (sinA > 0.7) { dy1 = 14; }
+    svg += '<text x="' + (lx + dx).toFixed(1) + '" y="' + (ly + dy1).toFixed(1) + '" text-anchor="' + anchor + '" font-size="13" font-weight="500" fill="#4d4c48" font-family="Inter,system-ui,-apple-system,Arial,sans-serif">' + dimAxes[i].label + '</text>';
+    svg += '<text x="' + (lx + dx).toFixed(1) + '" y="' + (ly + dy1 + 15).toFixed(1) + '" text-anchor="' + anchor + '" font-size="11" font-weight="500" fill="#c96442" font-family="Inter,system-ui,-apple-system,Arial,sans-serif">' + (Number(dims[dimAxes[i].key]) || 0) + '%</text>';
+  }
+
+  var svgWrap = document.createElement('div');
+  svgWrap.className = 'radar-wrap';
+  svgWrap.innerHTML = '<svg viewBox="0 0 310 300" width="100%" xmlns="http://www.w3.org/2000/svg">' + svg + '</svg>';
+  dimsEl.appendChild(svgWrap);
 }
 
 function copyResult() {

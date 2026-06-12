@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.cpu
+    container_name: emo-agent-backend
+    env_file:
+      - ./backend/.env
+    environment:
+      PYTHONPATH: /app
+      TTS_PROVIDER: tencent
+      ASR_DEVICE: cpu
+      RAG_ENABLED: "true"
+      RAG_EMBEDDING_ENABLED: "true"
+      RAG_EMBEDDING_MODEL_DIR: /app/models/bge-small-zh-v1.5
+    volumes:
+      - ./backend:/app/backend
+      - ./ai:/app/ai
+      - ./backend/data:/app/backend/data
+      - ./models:/app/models:ro
+      - ./knowledge:/app/knowledge:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

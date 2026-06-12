@@ -19,6 +19,11 @@ export interface ProfileUpdatePayload {
   nickname?: string | null
   motto?: string | null
   gender?: string | null
+  current_state?: string | null
+  focus?: string | null
+  personality?: string | null
+  weekly_goal?: string | null
+  setup_completed?: boolean
 }
 
 export interface ProfileEbtiPayload {

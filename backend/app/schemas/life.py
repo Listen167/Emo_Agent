@@ -15,8 +15,15 @@ class LifeRecordItem(BaseModel):
     location: Optional[str] = None
     tags: list[str] = []
     media_url: Optional[str] = None
+    visibility: str = "private"
+    like_count: int = 0
+    comment_count: int = 0
+    repost_count: int = 0
+    published_at: Optional[datetime] = None
     created_at: datetime
 
-    @field_serializer("created_at")
-    def serialize_created_at(self, value: datetime) -> str:
+    @field_serializer("created_at", "published_at")
+    def serialize_created_at(self, value: Optional[datetime]) -> Optional[str]:
+        if value is None:
+            return None
         return to_app_timezone(value).isoformat()
