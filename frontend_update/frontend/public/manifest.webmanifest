@@ -1,0 +1,25 @@
+{
+  "name": "U-Life Film Journal",
+  "short_name": "U-Life",
+  "description": "AI 情绪陪伴、生活记录与成长助手",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fdfbf7",
+  "theme_color": "#c85a54",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/xiaoxi/usual.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/xiaoxi/happy.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -244,7 +244,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { getChatStreamUrl, getHistory, sendChat } from '../api/chat'
+import { transcribeLocalAudio } from '../api/asr'
+import { getChatStreamUrl, getHistory } from '../api/chat'
 import { resolveAssetUrl } from '../api/client'
 import { createClientId } from '../utils/id'
 
@@ -618,23 +619,33 @@ const encodeWav = (samples: Float32Array, sampleRate: number): ArrayBuffer => {
 }
 
 const submitAudio = async (wavBlob: Blob) => {
-  const form = new FormData()
-  form.append('audio', wavBlob, 'recording.wav')
-  form.append('session_id', sid.value)
+  sending.value = true
   currentAvatarKey.value = 'think'
   try {
-    const { data } = await sendChat(form)
-    handleResponse(data)
+    const { data } = await transcribeLocalAudio(wavBlob)
+    const recognizedText = data.text.trim()
+    if (!recognizedText) throw new Error('empty transcription')
+    msgs.value.push({
+      id: createClientId(),
+      role: 'user',
+      content: recognizedText,
+      contentType: 'text',
+      createdAt: new Date().toISOString()
+    })
+    await scrollToBottom()
+    await streamChatMessage(recognizedText)
   } catch {
     currentAvatarKey.value = 'comfort'
     msgs.value.push({
       id: createClientId(),
       role: 'assistant',
-      content: '语音发送失败',
+      content: '语音识别失败。请确认本地后端正在运行，或先用文字发送。',
       contentType: 'error',
       avatarEmotion: 'comfort',
       createdAt: new Date().toISOString()
     })
+  } finally {
+    sending.value = false
   }
 }
 
@@ -719,23 +730,6 @@ const streamChatMessage = (msg: string) =>
       }
     }
   })
-
-const handleResponse = (data: any) => {
-  const emotionLabel = syncUserMessage(data)
-  const avatarEmotion = getAvatarKeyByEmotion(emotionLabel)
-  currentAvatarKey.value = avatarEmotion
-  msgs.value.push({
-    id: createClientId(),
-    role: 'assistant',
-    content: data.text,
-    contentType: 'text',
-    avatarEmotion,
-    ttsAudioUrl: data.tts_audio_url,
-    createdAt: data.assistant_created_at
-  })
-  scrollToBottom()
-  playAssistantAudio(data.tts_audio_url)
-}
 
 const syncUserMessage = (data: any): string | null => {
   const emotion = data?.emotion || {}

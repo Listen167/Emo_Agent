@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     TTS_PROVIDER: str = "edge"
     TTS_LOCAL_PROVIDER: str = "edge"
     TTS_VOICE: str = "zh-CN-YunxiNeural"
+    XIAOXI_TTS_VOICE: str = ""
     TTS_ALLOW_WINDOWS_FALLBACK: bool = False
     TENCENTCLOUD_SECRET_ID: str = ""
     TENCENTCLOUD_SECRET_KEY: str = ""
@@ -75,3 +76,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def get_xiaoxi_tts_voice() -> str | None:
+    return (settings.XIAOXI_TTS_VOICE or settings.TTS_VOICE or "").strip() or None

@@ -362,13 +362,91 @@
         </article>
       </aside>
     </main>
+
+    <button
+      :class="['resume-xiaoxi-fab', { active: assistantOpen, thinking: assistantSending }]"
+      type="button"
+      aria-label="打开简历工坊小曦"
+      @click="assistantOpen = !assistantOpen"
+    >
+      <img src="/xiaoxi/think.png" alt="小曦" />
+      <span v-if="assistantSending" aria-hidden="true"></span>
+    </button>
+
+    <Transition name="resume-assistant-panel">
+      <section v-if="assistantOpen" class="resume-assistant-panel" aria-label="简历工坊小曦悬浮窗">
+        <header class="assistant-panel-head">
+          <div>
+            <span class="kodak-chip">Resume Xiao Xi</span>
+            <h2>小曦简历面试官</h2>
+          </div>
+          <button class="assistant-icon-button" type="button" aria-label="关闭" @click="assistantOpen = false">×</button>
+        </header>
+
+        <div ref="assistantBoard" class="assistant-message-board">
+          <article
+            v-for="message in assistantMessages"
+            :key="message.id"
+            :class="['assistant-message', message.role === 'user' ? 'assistant-user-message' : 'assistant-ai-message']"
+          >
+            <img v-if="message.role === 'assistant'" src="/xiaoxi/think.png" alt="小曦" />
+            <div>
+              <span>{{ message.role === 'user' ? '我' : '小曦' }}</span>
+              <p>{{ message.content }}</p>
+              <audio
+                v-if="message.role === 'assistant' && message.ttsAudioUrl"
+                :src="resolveAssetUrl(message.ttsAudioUrl)"
+                controls
+                preload="none"
+              ></audio>
+            </div>
+          </article>
+          <div v-if="assistantMessages.length === 0" class="assistant-empty">
+            <img src="/xiaoxi/usual.png" alt="小曦" />
+            <strong>把大学经历发给我，我来帮你整理成简历表达。</strong>
+            <p>输入“面试模拟”后，我会基于当前简历、岗位和技术栈进行 10 题模拟，并在结束后评分。</p>
+          </div>
+          <div v-if="assistantSending" class="assistant-thinking">小曦正在整理...</div>
+        </div>
+
+        <div class="assistant-quick-actions">
+          <button type="button" @click="fillAssistantDraft('请帮我根据当前简历润色，并指出还需要补充哪些大学经历。')">润色补充</button>
+          <button type="button" @click="fillAssistantDraft('面试模拟')">面试模拟</button>
+          <button type="button" @click="clearAssistantMessages">清空窗口</button>
+        </div>
+
+        <footer class="assistant-composer">
+          <textarea
+            v-model="assistantDraft"
+            rows="2"
+            placeholder="补充经历，或输入“面试模拟”开始 10 题练习..."
+            @keydown.enter.exact.prevent="sendAssistantText"
+          />
+          <div class="assistant-composer-actions">
+            <button
+              :class="['assistant-record-button', { recording: assistantRecording }]"
+              :disabled="assistantSending"
+              type="button"
+              @click="toggleAssistantRecording"
+            >
+              {{ assistantRecording ? '停止' : '语音' }}
+            </button>
+            <button :disabled="assistantSending || !assistantDraft.trim()" type="button" @click="sendAssistantText">
+              {{ assistantSending ? '发送中' : '发送' }}
+            </button>
+          </div>
+        </footer>
+      </section>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 
-import { analyzeResumeMatch, polishResumeText } from '../api/resume'
+import { transcribeLocalAudio } from '../api/asr'
+import { resolveAssetUrl } from '../api/client'
+import { analyzeResumeMatch, polishResumeText, sendResumeAssistant } from '../api/resume'
 import { createClientId } from '../utils/id'
 
 interface Basics {
@@ -418,8 +496,19 @@ interface ResumeData {
 
 type RepeatItem = { id: string }
 type PolishableExperience = Project | Work
+type AssistantRole = 'user' | 'assistant'
+
+interface AssistantMessage {
+  id: string
+  role: AssistantRole
+  content: string
+  ttsAudioUrl?: string | null
+}
 
 const STORAGE_KEY = 'emo-agent-resume-v1'
+const ASSISTANT_STORAGE_KEY = 'emo-agent-resume-assistant-v1'
+const ASSISTANT_SESSION_KEY = 'emo-agent-resume-assistant-sid-v1'
+const TARGET_SAMPLE_RATE = 16000
 
 const emptyResume = (): ResumeData => ({
   basics: {
@@ -534,6 +623,16 @@ const polishing = ref<string | null>(null)
 const analyzing = ref(false)
 const interviewRole = ref('前端开发实习生')
 const interviewQuestions = ref<string[]>([])
+const assistantOpen = ref(false)
+const assistantDraft = ref('')
+const assistantSending = ref(false)
+const assistantRecording = ref(false)
+const assistantBoard = ref<HTMLElement>()
+const assistantSessionId = ref(localStorage.getItem(ASSISTANT_SESSION_KEY) || createClientId())
+const assistantMessages = ref<AssistantMessage[]>(loadAssistantMessages())
+let assistantMediaStream: MediaStream | null = null
+let assistantRecorder: MediaRecorder | null = null
+let assistantAudio: HTMLAudioElement | null = null
 const resumeScore = reactive({
   total: 0,
   items: [
@@ -545,6 +644,8 @@ const resumeScore = reactive({
   tips: ['点击重新评分，生成一份本地可演示的简历诊断。'],
 })
 
+localStorage.setItem(ASSISTANT_SESSION_KEY, assistantSessionId.value)
+
 watch(
   resume,
   value => {
@@ -552,6 +653,22 @@ watch(
   },
   { deep: true }
 )
+
+watch(
+  assistantMessages,
+  value => {
+    localStorage.setItem(ASSISTANT_STORAGE_KEY, JSON.stringify(value.slice(-40)))
+  },
+  { deep: true }
+)
+
+onBeforeUnmount(() => {
+  stopAssistantMedia()
+  if (assistantAudio) {
+    assistantAudio.pause()
+    assistantAudio = null
+  }
+})
 
 const visibleEducation = computed(() =>
   resume.education.filter(item => item.school.trim() || item.major.trim() || item.detail.trim())
@@ -732,6 +849,244 @@ const generateInterview = () => {
       ? '结合目标 JD，你认为自己最匹配的三项能力是什么？还有什么短板？'
       : '如果面试官追问项目结果，你会用哪些数据证明价值？',
   ]
+}
+
+function loadAssistantMessages(): AssistantMessage[] {
+  const saved = localStorage.getItem(ASSISTANT_STORAGE_KEY)
+  if (!saved) return []
+  try {
+    const parsed = JSON.parse(saved)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter(item => item && (item.role === 'user' || item.role === 'assistant') && typeof item.content === 'string')
+      .map(item => ({
+        id: typeof item.id === 'string' ? item.id : createClientId(),
+        role: item.role,
+        content: item.content,
+        ttsAudioUrl: typeof item.ttsAudioUrl === 'string' ? item.ttsAudioUrl : null,
+      }))
+  } catch {
+    return []
+  }
+}
+
+const assistantHistoryPayload = () =>
+  assistantMessages.value.slice(-24).map(message => ({
+    role: message.role,
+    content: message.content,
+  }))
+
+const fillAssistantDraft = (value: string) => {
+  assistantDraft.value = value
+  assistantOpen.value = true
+}
+
+const clearAssistantMessages = () => {
+  assistantMessages.value = []
+  localStorage.removeItem(ASSISTANT_STORAGE_KEY)
+  assistantSessionId.value = createClientId()
+  localStorage.setItem(ASSISTANT_SESSION_KEY, assistantSessionId.value)
+}
+
+const sendAssistantText = async () => {
+  const msg = assistantDraft.value.trim()
+  if (!msg || assistantSending.value) return
+  assistantDraft.value = ''
+  await submitAssistantMessage(msg)
+}
+
+const submitAssistantMessage = async (text: string) => {
+  assistantOpen.value = true
+  assistantSending.value = true
+  const historyBeforeSend = assistantHistoryPayload()
+  assistantMessages.value.push({
+    id: createClientId(),
+    role: 'user',
+    content: text,
+  })
+  await scrollAssistantToBottom()
+
+  await requestResumeAssistant(text, historyBeforeSend)
+}
+
+const requestResumeAssistant = async (text: string, historyBeforeSend = assistantHistoryPayload()) => {
+  try {
+    const { data } = await sendResumeAssistant({
+      text,
+      session_id: assistantSessionId.value,
+      resume_text: buildResumeText(),
+      job_description: jobDescription.value.trim() || undefined,
+      interview_role: interviewRole.value.trim() || resume.basics.headline || undefined,
+      history: historyBeforeSend,
+      enable_tts: true,
+    })
+    const latestUser = [...assistantMessages.value].reverse().find(message => message.role === 'user')
+    if (latestUser && data.user_text) latestUser.content = data.user_text
+    assistantMessages.value.push({
+      id: createClientId(),
+      role: 'assistant',
+      content: data.text,
+      ttsAudioUrl: data.tts_audio_url,
+    })
+    await scrollAssistantToBottom()
+    playAssistantReply(data.tts_audio_url)
+  } catch (error) {
+    const fallbackMessage = '这次没有处理成功。你可以稍后重试，或先用文字补充经历。'
+    const responseMessage = typeof (error as any)?.response?.data?.detail === 'string'
+      ? (error as any).response.data.detail
+      : ''
+    assistantMessages.value.push({
+      id: createClientId(),
+      role: 'assistant',
+      content: responseMessage ? `${fallbackMessage}\n\n错误信息：${responseMessage}` : fallbackMessage,
+    })
+  } finally {
+    assistantSending.value = false
+  }
+}
+
+const toggleAssistantRecording = async () => {
+  if (assistantRecording.value) {
+    assistantRecorder?.stop()
+    assistantRecording.value = false
+    return
+  }
+  try {
+    assistantMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    const chunks: Blob[] = []
+    assistantRecorder = new MediaRecorder(assistantMediaStream)
+    assistantRecorder.ondataavailable = event => {
+      if (event.data.size > 0) chunks.push(event.data)
+    }
+    assistantRecorder.onstop = async () => {
+      const blob = new Blob(chunks, { type: 'audio/webm' })
+      chunks.length = 0
+      stopAssistantMedia()
+      const wavBlob = await convertToWav(blob)
+      await submitAssistantAudio(wavBlob)
+    }
+    assistantRecorder.start()
+    assistantRecording.value = true
+  } catch {
+    assistantRecording.value = false
+    stopAssistantMedia()
+  }
+}
+
+const submitAssistantAudio = async (wavBlob: Blob) => {
+  assistantOpen.value = true
+  assistantSending.value = true
+  const historyBeforeSend = assistantHistoryPayload()
+  const placeholder: AssistantMessage = {
+    id: createClientId(),
+    role: 'user',
+    content: '语音输入识别中...',
+  }
+  assistantMessages.value.push(placeholder)
+  await scrollAssistantToBottom()
+
+  try {
+    const { data } = await transcribeLocalAudio(wavBlob)
+    const recognizedText = data.text.trim()
+    if (!recognizedText) throw new Error('empty transcription')
+    placeholder.content = recognizedText
+    await requestResumeAssistant(recognizedText, historyBeforeSend)
+  } catch {
+    placeholder.content = '语音识别失败。请确认本地后端正在运行，或先用文字发送。'
+    assistantSending.value = false
+  }
+}
+
+const stopAssistantMedia = () => {
+  assistantMediaStream?.getTracks().forEach(track => track.stop())
+  assistantMediaStream = null
+}
+
+const playAssistantReply = async (url?: string | null) => {
+  if (!url) return
+  if (assistantAudio) {
+    assistantAudio.pause()
+    assistantAudio = null
+  }
+  try {
+    assistantAudio = new Audio(resolveAssetUrl(url))
+    await assistantAudio.play()
+  } catch {
+    assistantAudio = null
+  }
+}
+
+const scrollAssistantToBottom = async () => {
+  await nextTick()
+  if (assistantBoard.value) {
+    assistantBoard.value.scrollTop = assistantBoard.value.scrollHeight
+  }
+}
+
+const convertToWav = async (blob: Blob): Promise<Blob> => {
+  const arrayBuffer = await blob.arrayBuffer()
+  const audioContext = new AudioContext()
+  try {
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0))
+    const monoData = mixToMono(audioBuffer)
+    const resampled = resampleAudio(monoData, audioBuffer.sampleRate, TARGET_SAMPLE_RATE)
+    const wavBuffer = encodeWav(resampled, TARGET_SAMPLE_RATE)
+    return new Blob([wavBuffer], { type: 'audio/wav' })
+  } finally {
+    audioContext.close()
+  }
+}
+
+const mixToMono = (buffer: AudioBuffer): Float32Array => {
+  const length = buffer.length
+  const result = new Float32Array(length)
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const data = buffer.getChannelData(ch)
+    for (let i = 0; i < length; i++) result[i] += data[i]
+  }
+  for (let i = 0; i < length; i++) result[i] /= buffer.numberOfChannels
+  return result
+}
+
+const resampleAudio = (data: Float32Array, fromRate: number, toRate: number): Float32Array => {
+  if (fromRate === toRate) return data
+  const ratio = fromRate / toRate
+  const newLength = Math.round(data.length / ratio)
+  const result = new Float32Array(newLength)
+  for (let i = 0; i < newLength; i++) {
+    const srcIdx = i * ratio
+    const srcIdxFloor = Math.floor(srcIdx)
+    const srcIdxCeil = Math.min(srcIdxFloor + 1, data.length - 1)
+    const t = srcIdx - srcIdxFloor
+    result[i] = data[srcIdxFloor] * (1 - t) + data[srcIdxCeil] * t
+  }
+  return result
+}
+
+const encodeWav = (samples: Float32Array, sampleRate: number): ArrayBuffer => {
+  const buffer = new ArrayBuffer(44 + samples.length * 2)
+  const view = new DataView(buffer)
+  const writeString = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i))
+  }
+  writeString(0, 'RIFF')
+  view.setUint32(4, 36 + samples.length * 2, true)
+  writeString(8, 'WAVE')
+  writeString(12, 'fmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, 1, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * 2, true)
+  view.setUint16(32, 2, true)
+  view.setUint16(34, 16, true)
+  writeString(36, 'data')
+  view.setUint32(40, samples.length * 2, true)
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]))
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
+  }
+  return buffer
 }
 
 const buildResumeText = () => {
@@ -1477,6 +1832,297 @@ textarea.input {
   font-size: 12.5px;
 }
 
+.resume-xiaoxi-fab {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 50;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(62 50 40 / 18%);
+  border-radius: 24px;
+  background: rgb(255 248 232 / 88%);
+  box-shadow: 0 18px 40px rgb(62 50 40 / 22%);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.resume-xiaoxi-fab:hover,
+.resume-xiaoxi-fab.active {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 48px rgb(62 50 40 / 26%);
+}
+
+.resume-xiaoxi-fab img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgb(62 50 40 / 16%));
+  animation: xiaoxiThink 1.5s ease-in-out infinite;
+}
+
+.resume-xiaoxi-fab span {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff8e8;
+  border-radius: 999px;
+  background: var(--journal-stamp);
+  box-shadow: 0 0 0 5px rgb(200 90 84 / 14%);
+}
+
+.resume-assistant-panel {
+  position: fixed;
+  right: 28px;
+  bottom: 116px;
+  z-index: 49;
+  width: min(420px, calc(100vw - 32px));
+  height: min(650px, calc(100vh - 142px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  overflow: hidden;
+  border: 1px solid rgb(62 50 40 / 18%);
+  background: rgb(255 248 232 / 96%);
+  box-shadow: 0 28px 68px rgb(62 50 40 / 26%);
+}
+
+.assistant-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgb(62 50 40 / 12%);
+  background: rgb(253 251 247 / 70%);
+}
+
+.assistant-panel-head h2 {
+  margin: 8px 0 0;
+  color: var(--journal-ink);
+  font-size: 18px;
+}
+
+.assistant-icon-button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(62 50 40 / 16%);
+  border-radius: 10px;
+  color: var(--journal-ink);
+  background: rgb(255 248 232 / 72%);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.assistant-message-board {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.assistant-message-board::-webkit-scrollbar {
+  width: 7px;
+}
+
+.assistant-message-board::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(62 50 40 / 20%);
+}
+
+.assistant-message {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.assistant-user-message {
+  justify-content: flex-end;
+}
+
+.assistant-message img {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 8px rgb(62 50 40 / 14%));
+}
+
+.assistant-message div {
+  max-width: min(310px, 82%);
+  padding: 11px 12px;
+  border: 1px solid rgb(62 50 40 / 14%);
+  background: rgb(253 251 247 / 82%);
+}
+
+.assistant-user-message div {
+  background: rgb(232 195 108 / 38%);
+}
+
+.assistant-message span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--journal-stamp);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.assistant-message p {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--journal-ink);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.assistant-message audio {
+  width: 100%;
+  height: 34px;
+  margin-top: 10px;
+}
+
+.assistant-empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin: 24px 0;
+  padding: 20px 16px;
+  text-align: center;
+  border: 1px dashed rgb(62 50 40 / 24%);
+  background: rgb(253 251 247 / 58%);
+}
+
+.assistant-empty img {
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
+}
+
+.assistant-empty strong {
+  color: var(--journal-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.assistant-empty p {
+  margin: 0;
+  color: var(--journal-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.assistant-thinking {
+  width: fit-content;
+  padding: 8px 11px;
+  color: var(--journal-muted);
+  border: 1px solid rgb(62 50 40 / 12%);
+  border-radius: 999px;
+  background: rgb(253 251 247 / 78%);
+  font-size: 12px;
+}
+
+.assistant-quick-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid rgb(62 50 40 / 10%);
+  background: rgb(253 251 247 / 50%);
+}
+
+.assistant-quick-actions button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgb(62 50 40 / 14%);
+  border-radius: 10px;
+  color: var(--journal-ink);
+  background: rgb(255 248 232 / 80%);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assistant-composer {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border-top: 1px solid rgb(62 50 40 / 12%);
+  background: rgb(255 248 232 / 88%);
+}
+
+.assistant-composer textarea {
+  width: 100%;
+  min-height: 68px;
+  max-height: 130px;
+  resize: vertical;
+  border: 1px solid rgb(62 50 40 / 18%);
+  border-radius: 12px;
+  padding: 10px 11px;
+  outline: none;
+  color: var(--journal-ink);
+  background: rgb(253 251 247 / 82%);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.assistant-composer-actions {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.assistant-composer-actions button {
+  min-height: 38px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.assistant-record-button {
+  color: var(--journal-ink);
+  background: var(--journal-kodak);
+}
+
+.assistant-record-button.recording {
+  color: #fff8e8;
+  background: var(--journal-stamp);
+  animation: recordPulse 0.9s ease-in-out infinite;
+}
+
+.assistant-composer-actions button:last-child {
+  color: #fff8e8;
+  background: linear-gradient(145deg, #4b3525, #1a120d);
+}
+
+.resume-assistant-panel-enter-active,
+.resume-assistant-panel-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.resume-assistant-panel-enter-from,
+.resume-assistant-panel-leave-to {
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+}
+
+@keyframes recordPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(200 90 84 / 18%);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgb(200 90 84 / 10%);
+  }
+}
+
 @media (max-width: 1180px) {
   .resume-header {
     align-items: flex-start;
@@ -1539,6 +2185,26 @@ textarea.input {
 
   .score-panel {
     grid-template-columns: 1fr;
+  }
+
+  .resume-xiaoxi-fab {
+    right: 16px;
+    bottom: 16px;
+    width: 66px;
+    height: 66px;
+    border-radius: 20px;
+  }
+
+  .resume-xiaoxi-fab img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .resume-assistant-panel {
+    right: 12px;
+    bottom: 92px;
+    width: calc(100vw - 24px);
+    height: min(620px, calc(100vh - 110px));
   }
 }
 

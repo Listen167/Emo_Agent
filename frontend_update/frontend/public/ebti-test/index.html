@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EBTI - 学历自嘲人格测试</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div id="start" class="page active">
+      <div class="logo">EBTI</div>
+      <p class="subtitle">Education Background Tease Inventory</p>
+      <p class="desc">学历鄙视链？全员自嘲，众生平等<br>别卷学历了，先笑完再说</p>
+      <button class="btn-primary" onclick="startTest()">开始测试</button>
+      <p class="tip">本测试无任何学术价值，纯属娱乐自嘲<br>不构成任何学历评价，拒绝学历鄙视链</p>
+    </div>
+
+    <div id="question" class="page">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-text">第 <span id="q-num">1</span> / 12 题</div>
+      <h2 id="q-title">题目加载中...</h2>
+      <div class="options" id="options"></div>
+      <div class="q-nav">
+        <button class="btn-prev" id="btn-prev" onclick="prevQuestion()" style="display:none;">&#8592; 上一题</button>
+      </div>
+    </div>
+
+    <div id="result" class="page">
+      <div class="r-badge">你的EBTI人格</div>
+      <div class="r-hero">
+        <img id="r-img" class="r-avatar" src="" alt="">
+        <div class="r-hero-info">
+          <h1 id="r-type">EBNO</h1>
+          <h2 id="r-name">野生特种兵</h2>
+        </div>
+      </div>
+      <div class="r-content" id="r-desc"></div>
+      <div class="r-quote" id="r-quote"></div>
+      <div class="r-content" id="r-review"></div>
+      <div class="r-content" id="r-dims"></div>
+      <div class="r-actions">
+        <button class="btn-primary" onclick="copyResult()">复制结果</button>
+        <button class="btn-secondary" onclick="saveDimImage()">保存维度图</button>
+        <button class="btn-secondary" onclick="restart()">重新测试</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="avatars.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

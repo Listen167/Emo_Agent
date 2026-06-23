@@ -46,7 +46,13 @@ def _emotion_category(emotion: str) -> str:
     }.get(emotion, "neutral")
 
 
-def _build_ws_url(session_id: str, emotion: str) -> str:
+def _voice_type(voice: str | None) -> int:
+    if voice and voice.strip().isdigit():
+        return int(voice.strip())
+    return settings.TENCENT_STREAM_TTS_VOICE_TYPE or settings.TENCENT_TTS_VOICE_TYPE
+
+
+def _build_ws_url(session_id: str, emotion: str, voice: str | None = None) -> str:
     if not settings.TENCENTCLOUD_APP_ID:
         raise RuntimeError("missing TENCENTCLOUD_APP_ID")
     if not settings.TENCENTCLOUD_SECRET_ID or not settings.TENCENTCLOUD_SECRET_KEY:
@@ -64,7 +70,7 @@ def _build_ws_url(session_id: str, emotion: str) -> str:
         "SessionId": session_id,
         "Speed": _speed_for_emotion(emotion),
         "Timestamp": timestamp,
-        "VoiceType": settings.TENCENT_TTS_VOICE_TYPE,
+        "VoiceType": _voice_type(voice),
         "Volume": settings.TENCENT_TTS_VOLUME,
     }
     if settings.TENCENT_TTS_FAST_VOICE_TYPE:
@@ -99,8 +105,9 @@ def _ensure_sentence(text: str) -> str:
 
 
 class TencentStreamTTSClient:
-    def __init__(self, emotion: str) -> None:
+    def __init__(self, emotion: str, voice: str | None = None) -> None:
         self.emotion = emotion
+        self.voice = voice
         self.session_id = str(uuid.uuid4())
         self._queue: asyncio.Queue[dict] = asyncio.Queue()
         self._text_queue: asyncio.Queue[str | None] = asyncio.Queue()
@@ -134,7 +141,7 @@ class TencentStreamTTSClient:
         try:
             import websockets
 
-            url = _build_ws_url(self.session_id, self.emotion)
+            url = _build_ws_url(self.session_id, self.emotion, self.voice)
             async with websockets.connect(url, max_size=None) as ws:
                 ready = False
                 sender_task = asyncio.create_task(self._send_loop(ws))

@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v1 import chat, growth, life, mood, plaza, profile, resume, town
+from app.api.v1 import asr, chat, growth, life, mood, plaza, profile, resume, town
 from app.core.config import settings
 from app.core.database import init_db
 
@@ -62,6 +62,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(chat.router)
+app.include_router(asr.router)
 app.include_router(growth.router)
 app.include_router(life.router)
 app.include_router(mood.router)

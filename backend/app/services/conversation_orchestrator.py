@@ -12,7 +12,7 @@ from ai.llm import get_llm_service
 from ai.rag.service import get_rag_service
 from ai.tts import get_tts_service
 from ai.tts.tencent_stream_provider import TencentStreamTTSClient
-from app.core.config import settings
+from app.core.config import get_xiaoxi_tts_voice, settings
 from app.core.time import utc_now
 from app.models.message import ChatMessage, GrowthMemory, GrowthProfile, MoodLog
 from app.schemas.chat import ChatResponse, EmotionResult, HistoryItem
@@ -114,6 +114,9 @@ class ConversationOrchestrator:
             settings.TTS_ENABLED
             and settings.TTS_PROVIDER.lower().strip() in {"tencent", "api"}
             and settings.TENCENT_STREAM_TTS_ENABLED
+            and bool(settings.TENCENTCLOUD_APP_ID)
+            and bool(settings.TENCENTCLOUD_SECRET_ID)
+            and bool(settings.TENCENTCLOUD_SECRET_KEY)
         )
         reply_parts: list[str] = []
         tts_chunks: list[bytes] = []
@@ -165,7 +168,7 @@ class ConversationOrchestrator:
 
         if use_stream_tts:
             queue: asyncio.Queue[dict] = asyncio.Queue()
-            async with TencentStreamTTSClient(fused["label"]) as tts_client:
+            async with TencentStreamTTSClient(fused["label"], get_xiaoxi_tts_voice()) as tts_client:
                 async def produce_text():
                     async for _ in generate_text(tts_client, queue):
                         pass
@@ -341,7 +344,7 @@ class ConversationOrchestrator:
     async def _synthesize_reply(self, reply: str, session_id: str, emotion_label: str) -> str | None:
         if not reply.strip() or not settings.TTS_ENABLED:
             return None
-        path = await asyncio.to_thread(self.tts_service.synthesize, reply, session_id, emotion_label)
+        path = await asyncio.to_thread(self.tts_service.synthesize, reply, session_id, emotion_label, get_xiaoxi_tts_voice())
         return path or None
 
     async def _save_messages(

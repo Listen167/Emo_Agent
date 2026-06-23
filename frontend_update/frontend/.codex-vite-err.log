@@ -1,0 +1,412 @@
+[2m19:15:42[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:15:42[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:24:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:24:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:24:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/send[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:25:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:25:05[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:25:25[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile/ebti[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:25:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:26:16[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:33:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:33:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:33:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:33:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:33:55[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:34:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:34:07[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:34:14[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:34:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:35:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:35:36[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:35:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:35:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:35:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:36:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:36:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:36:28[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:36:31[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:17[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:19[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:21[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:32[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:32[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:37[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:38[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:39[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:37:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:49:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:49:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:49:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:49:28[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:49:34[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:54:31[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:54:31[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:54:37[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:54:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m19:54:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:03:51[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:03:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:04:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:04:06[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:12[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:15[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:25[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:28[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:42[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:05:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:06:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m20:06:09[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:11:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:11:37[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:13:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:13:55[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:14:13[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:18:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:18:13[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:18:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:18:24[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:09[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:09[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:14[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:14[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:16[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:19[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:56[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:27:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:29:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:29:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/mood/calendar?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32&year=2026&month=6[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:30:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:30:31[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/send[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:30:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/send[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:30:34[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/send[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:30:36[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/send[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:33:56[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:34:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:34:44[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:49:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:49:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:49:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:49:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:49:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/life/records?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:50:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/plaza/posts?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:50:03[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/profile?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:50:03[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)
+[2m23:50:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/chat/history?session_id=814ecf84-c47a-4822-8864-f7cbee98ff32[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)

@@ -15,6 +15,7 @@ import axios from 'axios'
 
 /** 后端根地址（不含 /api 后缀）—— 用于静态资源 /data/... */
 export const BACKEND_ORIGIN: string = import.meta.env.VITE_BACKEND_ORIGIN || ''
+export const LOCAL_ASR_BASE_URL: string = import.meta.env.VITE_LOCAL_ASR_BASE_URL || 'http://127.0.0.1:8000/api'
 const baseURL: string = import.meta.env.VITE_API_BASE_URL || '/api'
 
 const apiClient = axios.create({
