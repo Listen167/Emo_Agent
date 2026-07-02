@@ -12,12 +12,29 @@ def _project_root() -> Path:
 
 
 def _model_path() -> Path:
+    fallback = _project_root() / "models" / "bge-small-zh-v1.5"
     try:
         from app.core.config import settings
 
-        return settings.RAG_EMBEDDING_MODEL_DIR
+        configured = settings.RAG_EMBEDDING_MODEL_DIR
     except Exception:
-        return _project_root() / "models" / "bge-small-zh-v1.5"
+        return fallback
+
+    if configured.exists():
+        return configured
+
+    # Docker deployments often use /app/models/..., but local Windows runs from the repo root.
+    # Keep the Docker config valid while making local tests work without editing every .env value.
+    normalized = configured.as_posix().lstrip("/")
+    if normalized.startswith("app/"):
+        local_from_docker_path = _project_root() / normalized.removeprefix("app/")
+        if local_from_docker_path.exists():
+            return local_from_docker_path
+
+    if fallback.exists():
+        return fallback
+
+    return configured
 
 
 def get_embedding_model():

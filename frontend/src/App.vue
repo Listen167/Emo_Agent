@@ -4,6 +4,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import OnboardingModal from './components/OnboardingModal.vue'
 import ProfileCard from './components/ProfileCard.vue'
 import ChatView from './views/ChatView.vue'
+import GameTownView from './views/GameTownView.vue'
 import GrowthView from './views/GrowthView.vue'
 import LandingView from './views/LandingView.vue'
 import LifeRecordView from './views/LifeRecordView.vue'
@@ -14,26 +15,27 @@ import { BACKEND_ORIGIN } from './api/client'
 import { updateProfile, updateProfileEbti } from './api/profile'
 import { createClientId } from './utils/id'
 
-type ViewKey = 'chat' | 'life' | 'mood' | 'resume' | 'growth' | 'ebti' | 'plaza'
+type ViewKey = 'town' | 'chat' | 'life' | 'mood' | 'resume' | 'growth' | 'ebti' | 'plaza'
 
 const showLanding = ref(true)
 const showOnboarding = ref(false)
 const sessionId = ref(localStorage.getItem('sid') || createClientId())
 localStorage.setItem('sid', sessionId.value)
 const profileVersion = ref(0)
-const activeView = ref<ViewKey>('chat')
+const activeView = ref<ViewKey>('town')
 const viewHistory = ref<ViewKey[]>([])
 const viewForwardStack = ref<ViewKey[]>([])
 const sidebarCollapsed = ref(false)
 const townUrl = `/ai-town/index.html${BACKEND_ORIGIN ? `?backend=${encodeURIComponent(`${BACKEND_ORIGIN}/api/town`)}` : ''}`
 const navItems = [
-  { key: 'chat', cn: '首页', en: 'Home', icon: '⌂', note: '和小曦对话' },
-  { key: 'life', cn: '胶卷库', en: 'Rolls', icon: '▣', note: '生活记录' },
-  { key: 'mood', cn: '拍摄记录', en: 'Log', icon: '◫', note: '心情日历' },
+  { key: 'town', cn: '小镇首页', en: 'Town', icon: '⌂', note: '小游戏入口' },
+  { key: 'chat', cn: '小曦小屋', en: 'Chat', icon: '☏', note: '和小曦对话' },
+  { key: 'life', cn: '成长记忆', en: 'Rolls', icon: '▣', note: '图片与记录' },
+  // { key: 'mood', cn: '心情日历', en: 'Mood Calendar', icon: '◫', note: '情绪轨迹' },
   { key: 'resume', cn: '简历工坊', en: 'Resume', icon: '▤', note: '简历制作' },
   { key: 'ebti', cn: '我的暗房', en: 'Darkroom', icon: '✦', note: 'EBTI 测试' },
-  { key: 'plaza', cn: '聊天广场', en: 'Plaza', icon: '◈', note: '公开胶片' },
-  { key: 'growth', cn: '成长中心', en: 'Growth', icon: '✺', note: '周报与隐私' },
+  { key: 'plaza', cn: '聊天广场', en: 'Plaza', icon: '◈', note: '公开与私密动态' },
+  { key: 'growth', cn: '成长档案', en: 'Growth', icon: '✺', note: '周报与隐私' },
 ] as const
 const activeLabel = computed(() => navItems.find(item => item.key === activeView.value)?.note || 'Film Journal')
 const activeNavIndex = computed(() => Math.max(0, navItems.findIndex(item => item.key === activeView.value)))
@@ -309,7 +311,8 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <Transition name="view-develop" mode="out-in">
-        <ChatView v-if="activeView === 'chat'" key="chat" />
+        <GameTownView v-if="activeView === 'town'" key="town" @enter-view="navigateTo" />
+        <ChatView v-else-if="activeView === 'chat'" key="chat" />
         <LifeRecordView v-else-if="activeView === 'life'" key="life" />
         <MoodCalendarView v-else-if="activeView === 'mood'" key="mood" />
         <ResumeView v-else-if="activeView === 'resume'" key="resume" />

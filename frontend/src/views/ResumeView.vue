@@ -364,13 +364,17 @@
     </main>
 
     <button
-      :class="['resume-xiaoxi-fab', { active: assistantOpen, thinking: assistantSending }]"
+      :class="['resume-xiaoxi-fab', `resume-xiaoxi-${currentAvatarKey}`, { active: assistantOpen, thinking: assistantSending }]"
       type="button"
-      aria-label="打开简历工坊小曦"
+      aria-describedby="resume-xiaoxi-role-tip"
+      aria-label="打开小曦 AI 面试官"
       @click="assistantOpen = !assistantOpen"
     >
-      <img src="/xiaoxi/think.png" alt="小曦" />
-      <span v-if="assistantSending" aria-hidden="true"></span>
+      <img :src="currentXiaoxiAvatar.src" :alt="currentXiaoxiAvatar.alt" />
+      <span id="resume-xiaoxi-role-tip" class="resume-xiaoxi-role-tip" role="tooltip">
+        简历准备好了吗？我是小曦 AI 面试官，点我来一轮真实追问。
+      </span>
+      <span v-if="assistantSending" class="resume-xiaoxi-status-dot" aria-hidden="true"></span>
     </button>
 
     <Transition name="resume-assistant-panel">
@@ -389,7 +393,12 @@
             :key="message.id"
             :class="['assistant-message', message.role === 'user' ? 'assistant-user-message' : 'assistant-ai-message']"
           >
-            <img v-if="message.role === 'assistant'" src="/xiaoxi/think.png" alt="小曦" />
+            <img
+              v-if="message.role === 'assistant'"
+              :class="['assistant-xiaoxi-avatar', `assistant-xiaoxi-${currentAvatarKey}`]"
+              :src="currentXiaoxiAvatar.src"
+              :alt="currentXiaoxiAvatar.alt"
+            />
             <div>
               <span>{{ message.role === 'user' ? '我' : '小曦' }}</span>
               <p>{{ message.content }}</p>
@@ -402,7 +411,11 @@
             </div>
           </article>
           <div v-if="assistantMessages.length === 0" class="assistant-empty">
-            <img src="/xiaoxi/usual.png" alt="小曦" />
+            <img
+              :class="['assistant-empty-avatar', `assistant-xiaoxi-${currentAvatarKey}`]"
+              :src="currentXiaoxiAvatar.src"
+              :alt="currentXiaoxiAvatar.alt"
+            />
             <strong>把大学经历发给我，我来帮你整理成简历表达。</strong>
             <p>输入“面试模拟”后，我会基于当前简历、岗位和技术栈进行 10 题模拟，并在结束后评分。</p>
           </div>
@@ -442,7 +455,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 import { transcribeLocalAudio } from '../api/asr'
 import { resolveAssetUrl } from '../api/client'
@@ -508,7 +521,20 @@ interface AssistantMessage {
 const STORAGE_KEY = 'emo-agent-resume-v1'
 const ASSISTANT_STORAGE_KEY = 'emo-agent-resume-assistant-v1'
 const ASSISTANT_SESSION_KEY = 'emo-agent-resume-assistant-sid-v1'
+const XIAOXI_AVATAR_STORAGE_KEY = 'u-life-xiaoxi-avatar-key-v1'
 const TARGET_SAMPLE_RATE = 16000
+
+const xiaoxiAvatars = {
+  usual: { src: '/xiaoxi/usual.png', alt: '小曦日常表情' },
+  happy: { src: '/xiaoxi/happy.png', alt: '小曦开心表情' },
+  comfort: { src: '/xiaoxi/comfort.png', alt: '小曦安慰表情' },
+  angry: { src: '/xiaoxi/angry.png', alt: '小曦生气表情' },
+  shy: { src: '/xiaoxi/shy.png', alt: '小曦害羞表情' },
+  think: { src: '/xiaoxi/think.png', alt: '小曦思考表情' },
+  naughty: { src: '/xiaoxi/naughty.png', alt: '小曦俏皮表情' },
+} as const
+
+type XiaoxiAvatarKey = keyof typeof xiaoxiAvatars
 
 const emptyResume = (): ResumeData => ({
   basics: {
@@ -529,13 +555,13 @@ const emptyResume = (): ResumeData => ({
 
 const demoResume = (): ResumeData => ({
   basics: {
-    name: '陈小曦',
+    name: '林小曦',
     headline: '前端开发实习生 / AI 应用开发方向',
     phone: '138 0000 0000',
     email: 'xiaoxi@example.com',
     location: '广州',
-    website: 'github.com/xiaoxi',
-    summary: '计算机相关专业本科生，关注 AI 应用与前端工程化。熟悉 Vue、TypeScript、FastAPI，能够从需求拆解、界面实现到接口联调完成完整功能闭环。',
+    website: 'github.com/xiaoxi · xiaoxi.dev',
+    summary: '计算机科学与技术本科生，主攻前端工程化与 AI 应用落地，熟悉 Vue 3、TypeScript、FastAPI 与 LLM/RAG 基础开发。具备从需求拆解、交互设计、前端实现到接口联调的完整项目经验，能够把复杂功能整理成稳定、可演示、可迭代的产品体验。',
   },
   education: [
     {
@@ -543,22 +569,39 @@ const demoResume = (): ResumeData => ({
       school: '广东工业大学',
       major: '计算机科学与技术',
       period: '2022.09 - 2026.06',
-      detail: 'GPA 3.7/4.0，主修数据结构、数据库系统、机器学习、Web 开发',
+      detail: 'GPA 3.7/4.0，专业前 15%；主修数据结构、数据库系统、计算机网络、软件工程、机器学习、Web 前端开发',
     },
   ],
   projects: [
     {
       id: createClientId(),
-      name: 'Emo Agent 情绪陪伴系统',
-      role: '核心开发',
+      name: 'Emo Agent 情绪陪伴与成长记录平台',
+      role: '核心开发 / 前端负责人',
       period: '2026.03 - 至今',
-      stack: 'Vue 3, TypeScript, FastAPI, SQLAlchemy, LLM, RAG',
-      description: '设计并实现聊天、生活记录、心情日历等核心模块，完成前后端接口联调。\n接入语音识别、情绪识别、TTS 与本地知识库检索，提升系统的多模态交互能力。\n基于用户场景整理校园知识库，让模型回答竞赛、推免等问题时优先引用本地资料。',
+      stack: 'Vue 3, TypeScript, Vite, FastAPI, SQLAlchemy, LLM, RAG, WebSocket',
+      description: '负责聊天广场、成长记忆、简历工坊等核心页面开发，抽象 RecordComposer 通用发布器，减少重复表单逻辑并统一 public/private 发布心智。\n接入 ASR、TTS、情绪识别与流式对话能力，完成录音、转写、回复播放和异常兜底流程，提升多模态交互完整度。\n基于本地校园知识库设计 RAG 检索链路，让模型在回答竞赛、推免、课程与就业问题时优先引用可信资料。\n优化小曦头像选择与跨页面状态同步，使用 localStorage 与自定义事件保证聊天页、成长页、简历面试页展示一致。',
+    },
+    {
+      id: createClientId(),
+      name: 'AI 简历工坊与模拟面试助手',
+      role: '独立开发',
+      period: '2026.04 - 2026.06',
+      stack: 'Vue 3, TypeScript, REST API, Prompt Engineering, LocalStorage',
+      description: '设计一页式简历编辑与实时预览界面，支持基础信息、教育经历、项目经历、实习经历、技能荣誉的结构化维护。\n实现简历评分、岗位 JD 匹配、AI 润色和 10 题模拟面试流程，帮助用户从“写经历”过渡到“准备追问”。\n封装简历文本构建与历史上下文传递逻辑，使 AI 面试官能够基于当前简历、目标岗位和对话历史连续追问。\n提供 JSON 导入导出与打印/PDF 能力，保证用户数据可迁移、可备份、可直接用于投递材料整理。',
     },
   ],
-  work: [],
-  skills: 'Vue 3, TypeScript, Tailwind CSS, FastAPI, SQLAlchemy, Python, LLM 应用, RAG, Git',
-  awards: '蓝桥杯省级一等奖\n校级优秀学生奖学金\n大学生创新创业训练计划项目负责人',
+  work: [
+    {
+      id: createClientId(),
+      company: '校级软件创新实验室',
+      position: '前端开发成员',
+      period: '2025.09 - 2026.01',
+      location: '广州',
+      description: '参与实验室项目管理平台开发，负责任务看板、成员主页与数据统计模块，完成从 Figma 标注到 Vue 组件实现的交付。\n与后端同学协作制定接口字段和错误码约定，使用 Mock 数据提前联调，减少接口变更导致的返工。\n整理前端组件命名、表单校验和页面状态处理规范，沉淀 12 个可复用业务组件。',
+    },
+  ],
+  skills: 'Vue 3, TypeScript, JavaScript ES6+, Vite, Pinia, HTML5, CSS3, Responsive Design, FastAPI, Python, SQLAlchemy, MySQL, REST API, WebSocket, LLM 应用, RAG, Prompt Engineering, Git, Figma',
+  awards: '蓝桥杯程序设计竞赛省级一等奖\n大学生创新创业训练计划项目负责人\n校级优秀学生奖学金\n校级软件设计大赛二等奖',
 })
 
 function newEducation(): Education {
@@ -608,21 +651,28 @@ const normalizeResume = (value: Partial<ResumeData> | null): ResumeData => {
 
 const loadInitialResume = (): ResumeData => {
   const saved = localStorage.getItem(STORAGE_KEY)
-  if (!saved) return emptyResume()
+  if (!saved) return demoResume()
   try {
     return normalizeResume(JSON.parse(saved))
   } catch {
-    return emptyResume()
+    return demoResume()
   }
 }
 
 const resume = reactive<ResumeData>(loadInitialResume())
-const jobDescription = ref('')
+const jobDescription = ref('岗位职责：参与 AI 产品前端研发，负责 Web 端页面、组件和交互体验实现；与后端协作完成接口联调，关注性能、可维护性和用户体验。\n任职要求：熟悉 Vue / TypeScript / JavaScript，了解 REST API、工程化构建和 Git 协作；有 AI 应用、LLM、RAG 或多模态交互项目经验优先。')
 const analysisResult = ref('')
 const polishing = ref<string | null>(null)
 const analyzing = ref(false)
 const interviewRole = ref('前端开发实习生')
-const interviewQuestions = ref<string[]>([])
+const interviewQuestions = ref<string[]>([
+  '请用 1 分钟介绍自己，并说明你为什么适合前端开发实习生 / AI 应用开发方向。',
+  '你在「Emo Agent 情绪陪伴与成长记录平台」中承担了什么角色？最难的问题是什么？',
+  '你为什么要抽象 RecordComposer？它解决了哪些重复操作和用户心智问题？',
+  '讲一下你如何处理小曦头像跨页面同步，为什么选择 localStorage + 自定义事件？',
+  '如果面试官追问 RAG 在项目中的价值，你会如何说明检索链路和可信回答之间的关系？',
+  '如果让你重新做一次简历工坊，你会优先优化哪一部分？为什么？',
+])
 const assistantOpen = ref(false)
 const assistantDraft = ref('')
 const assistantSending = ref(false)
@@ -630,6 +680,11 @@ const assistantRecording = ref(false)
 const assistantBoard = ref<HTMLElement>()
 const assistantSessionId = ref(localStorage.getItem(ASSISTANT_SESSION_KEY) || createClientId())
 const assistantMessages = ref<AssistantMessage[]>(loadAssistantMessages())
+const storedXiaoxiAvatarKey = localStorage.getItem(XIAOXI_AVATAR_STORAGE_KEY)
+const currentAvatarKey = ref<XiaoxiAvatarKey>(
+  isXiaoxiAvatarKey(storedXiaoxiAvatarKey) ? storedXiaoxiAvatarKey : 'think'
+)
+const currentXiaoxiAvatar = computed(() => xiaoxiAvatars[currentAvatarKey.value])
 let assistantMediaStream: MediaStream | null = null
 let assistantRecorder: MediaRecorder | null = null
 let assistantAudio: HTMLAudioElement | null = null
@@ -662,13 +717,28 @@ watch(
   { deep: true }
 )
 
+onMounted(() => {
+  syncCurrentAvatar()
+  window.addEventListener('u-life-xiaoxi-avatar-changed', syncCurrentAvatar)
+})
+
 onBeforeUnmount(() => {
+  window.removeEventListener('u-life-xiaoxi-avatar-changed', syncCurrentAvatar)
   stopAssistantMedia()
   if (assistantAudio) {
     assistantAudio.pause()
     assistantAudio = null
   }
 })
+
+function isXiaoxiAvatarKey(value: string | null): value is XiaoxiAvatarKey {
+  return Boolean(value && value in xiaoxiAvatars)
+}
+
+function syncCurrentAvatar() {
+  const value = localStorage.getItem(XIAOXI_AVATAR_STORAGE_KEY)
+  currentAvatarKey.value = isXiaoxiAvatarKey(value) ? value : 'think'
+}
 
 const visibleEducation = computed(() =>
   resume.education.filter(item => item.school.trim() || item.major.trim() || item.detail.trim())
@@ -1710,13 +1780,37 @@ textarea.input {
 .resume-preview-panel {
   position: sticky;
   top: 24px;
+  align-self: start;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 8px;
+  scrollbar-gutter: stable;
+}
+
+.resume-preview-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.resume-preview-panel::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(62 50 40 / 22%);
+}
+
+.resume-preview-panel::-webkit-scrollbar-track {
+  background: rgb(255 248 232 / 32%);
 }
 
 .preview-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   margin-bottom: 12px;
   padding: 12px 14px;
   border: 1px solid rgb(62 50 40 / 14%);
   background: rgb(255 248 232 / 66%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .preview-toolbar span {
@@ -1850,6 +1944,7 @@ textarea.input {
 }
 
 .resume-xiaoxi-fab:hover,
+.resume-xiaoxi-fab:focus-visible,
 .resume-xiaoxi-fab.active {
   transform: translateY(-3px);
   box-shadow: 0 22px 48px rgb(62 50 40 / 26%);
@@ -1860,10 +1955,85 @@ textarea.input {
   height: 64px;
   object-fit: contain;
   filter: drop-shadow(0 8px 10px rgb(62 50 40 / 16%));
-  animation: xiaoxiThink 1.5s ease-in-out infinite;
+  transform-origin: 50% 88%;
 }
 
-.resume-xiaoxi-fab span {
+.resume-xiaoxi-usual img,
+.assistant-xiaoxi-usual {
+  animation: xiaoxiBreathe 4.6s ease-in-out infinite;
+}
+
+.resume-xiaoxi-think img,
+.assistant-xiaoxi-think {
+  animation: xiaoxiThink 1.45s ease-in-out infinite;
+}
+
+.resume-xiaoxi-happy img,
+.assistant-xiaoxi-happy {
+  animation: xiaoxiHappy 1.9s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+.resume-xiaoxi-comfort img,
+.assistant-xiaoxi-comfort {
+  animation: xiaoxiComfort 3.2s ease-in-out infinite;
+}
+
+.resume-xiaoxi-angry img,
+.assistant-xiaoxi-angry {
+  animation: xiaoxiAngry 0.42s ease-in-out infinite;
+}
+
+.resume-xiaoxi-shy img,
+.assistant-xiaoxi-shy {
+  animation: xiaoxiShy 2.2s ease-in-out infinite;
+}
+
+.resume-xiaoxi-naughty img,
+.assistant-xiaoxi-naughty {
+  animation: xiaoxiNaughty 2.1s ease-in-out infinite;
+}
+
+.resume-xiaoxi-role-tip {
+  position: absolute;
+  right: calc(100% + 12px);
+  bottom: 8px;
+  width: 236px;
+  padding: 10px 12px;
+  border: 1px solid rgb(62 50 40 / 16%);
+  border-radius: 12px;
+  color: var(--journal-ink);
+  background: rgb(255 248 232 / 96%);
+  box-shadow: 0 14px 30px rgb(62 50 40 / 18%);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(8px) translateY(4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.resume-xiaoxi-role-tip::after {
+  content: "";
+  position: absolute;
+  right: -7px;
+  bottom: 20px;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid rgb(62 50 40 / 16%);
+  border-right: 1px solid rgb(62 50 40 / 16%);
+  background: rgb(255 248 232 / 96%);
+  transform: rotate(45deg);
+}
+
+.resume-xiaoxi-fab:hover .resume-xiaoxi-role-tip,
+.resume-xiaoxi-fab:focus-visible .resume-xiaoxi-role-tip {
+  opacity: 1;
+  transform: translateX(0) translateY(0);
+}
+
+.resume-xiaoxi-status-dot {
   position: absolute;
   right: 10px;
   top: 10px;
@@ -1954,6 +2124,7 @@ textarea.input {
   height: 42px;
   object-fit: contain;
   filter: drop-shadow(0 6px 8px rgb(62 50 40 / 14%));
+  transform-origin: 50% 88%;
 }
 
 .assistant-message div {
@@ -2004,6 +2175,8 @@ textarea.input {
   width: 86px;
   height: 86px;
   object-fit: contain;
+  filter: drop-shadow(0 8px 12px rgb(62 50 40 / 14%));
+  transform-origin: 50% 88%;
 }
 
 .assistant-empty strong {
@@ -2123,6 +2296,87 @@ textarea.input {
   }
 }
 
+@keyframes xiaoxiBreathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.025);
+  }
+}
+
+@keyframes xiaoxiThink {
+  0%,
+  100% {
+    transform: rotate(-2deg) translateY(0);
+  }
+  50% {
+    transform: rotate(3deg) translateY(-3px);
+  }
+}
+
+@keyframes xiaoxiHappy {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  28% {
+    transform: translateY(-7px) scale(1.06);
+  }
+  48% {
+    transform: translateY(1px) scale(0.99);
+  }
+}
+
+@keyframes xiaoxiComfort {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 5px 8px rgb(62 50 40 / 16%));
+  }
+  50% {
+    transform: translateY(-4px) scale(1.03);
+    filter: drop-shadow(0 9px 14px rgb(200 90 84 / 20%));
+  }
+}
+
+@keyframes xiaoxiAngry {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+  25% {
+    transform: translateX(-2px) rotate(-2deg);
+  }
+  75% {
+    transform: translateX(2px) rotate(2deg);
+  }
+}
+
+@keyframes xiaoxiShy {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  50% {
+    transform: rotate(-4deg) scale(1.025);
+  }
+}
+
+@keyframes xiaoxiNaughty {
+  0%,
+  100% {
+    transform: rotate(0) translateY(0);
+  }
+  30% {
+    transform: rotate(5deg) translateY(-4px);
+  }
+  58% {
+    transform: rotate(-3deg) translateY(1px);
+  }
+}
+
 @media (max-width: 1180px) {
   .resume-header {
     align-items: flex-start;
@@ -2141,7 +2395,14 @@ textarea.input {
   .resume-preview-panel {
     position: relative;
     top: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
     margin-top: 24px;
+  }
+
+  .preview-toolbar {
+    position: static;
   }
 }
 
@@ -2200,6 +2461,24 @@ textarea.input {
     height: 56px;
   }
 
+  .resume-xiaoxi-role-tip {
+    right: 0;
+    bottom: calc(100% + 10px);
+    width: min(236px, calc(100vw - 32px));
+    transform: translateY(8px);
+  }
+
+  .resume-xiaoxi-role-tip::after {
+    right: 24px;
+    bottom: -7px;
+    transform: rotate(135deg);
+  }
+
+  .resume-xiaoxi-fab:hover .resume-xiaoxi-role-tip,
+  .resume-xiaoxi-fab:focus-visible .resume-xiaoxi-role-tip {
+    transform: translateY(0);
+  }
+
   .resume-assistant-panel {
     right: 12px;
     bottom: 92px;
@@ -2222,7 +2501,10 @@ textarea.input {
   .resume-layout,
   .resume-preview-panel {
     display: block !important;
+    height: auto !important;
     min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     padding: 0 !important;
     margin: 0 !important;
   }

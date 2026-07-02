@@ -38,7 +38,7 @@ const enterApp = () => {
       <i v-for="index in 6" :key="index"></i>
     </div>
     <div class="center">
-      <span class="kodak-tag">Kodak Portra 400</span>
+      <span class="kodak-tag">Student Growth Journal</span>
       <h1 class="title" aria-label="Film Journal">
         <span>Film</span>
         <span>Journal</span>

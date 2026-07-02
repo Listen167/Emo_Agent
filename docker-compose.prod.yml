@@ -25,9 +25,10 @@ services:
       args:
         VITE_API_BASE_URL: /api
         VITE_BACKEND_ORIGIN: ""
+        VITE_LOCAL_ASR_BASE_URL: /api
     container_name: emo-agent-frontend
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "16788:80"
     restart: unless-stopped

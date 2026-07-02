@@ -2,9 +2,9 @@
   <div class="chat-journal" @wheel="handleChatWheel">
     <header class="journal-header">
       <div class="journal-copy">
-        <span class="kodak-chip">Kodak Portra 400</span>
+        <span class="kodak-chip">Student Growth Journal</span>
         <h1 class="script-title">Film Journal</h1>
-        <p>阳光正好，海风温柔。和小曦记录今天这一次快门的心跳。</p>
+        <p>和小曦记录学习、生活与情绪变化，把每天的校园片段沉淀成成长轨迹。</p>
       </div>
       <div class="today-film-folder" aria-label="今日胶片夹">
         <span class="folder-tab">今日胶片夹</span>
@@ -247,6 +247,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { transcribeLocalAudio } from '../api/asr'
 import { getChatStreamUrl, getHistory } from '../api/chat'
 import { resolveAssetUrl } from '../api/client'
+import { grantMoodReward } from '../game/town/townState'
 import { createClientId } from '../utils/id'
 
 interface Message {
@@ -731,6 +732,20 @@ const streamChatMessage = (msg: string) =>
     }
   })
 
+const maybeGrantTownReward = (emotionLabel: string | null, messageId: string) => {
+  const reward = grantMoodReward(emotionLabel, messageId)
+  if (!reward) return
+
+  msgs.value.push({
+    id: createClientId(),
+    role: 'assistant',
+    content: `你收到了 ${reward.label} x${reward.count}，可以回到小镇农田种下。`,
+    contentType: 'text',
+    avatarEmotion: 'happy',
+    createdAt: new Date().toISOString(),
+  })
+}
+
 const syncUserMessage = (data: any): string | null => {
   const emotion = data?.emotion || {}
   const label = typeof emotion.label === 'string' ? emotion.label : null
@@ -740,6 +755,7 @@ const syncUserMessage = (data: any): string | null => {
   for (let index = msgs.value.length - 1; index >= 0; index -= 1) {
     const message = msgs.value[index]
     if (message.role !== 'user') continue
+    const shouldGrantReward = message.emotionLabel == null && message.emotionConf == null
     if (message.emotionLabel == null && message.emotionConf == null) {
       message.emotionLabel = label
       message.emotionConf = confidence
@@ -747,12 +763,16 @@ const syncUserMessage = (data: any): string | null => {
     if (!message.content.trim() && userText) {
       message.content = userText
     }
+    if (shouldGrantReward) {
+      maybeGrantTownReward(label, message.id)
+    }
     return label
   }
 
   if (userText) {
+    const messageId = createClientId()
     msgs.value.push({
-      id: createClientId(),
+      id: messageId,
       role: 'user',
       content: userText,
       contentType: 'text',
@@ -760,6 +780,7 @@ const syncUserMessage = (data: any): string | null => {
       emotionConf: confidence,
       createdAt: data?.user_created_at || new Date().toISOString(),
     })
+    maybeGrantTownReward(label, messageId)
   }
   return label
 }

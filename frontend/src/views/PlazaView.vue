@@ -25,6 +25,13 @@
             静默消息
             <span v-if="totalUnreadComments > 0">{{ totalUnreadComments }}</span>
           </button>
+          <button
+            :class="['compose-toggle-button', { active: composerOpen }]"
+            type="button"
+            @click="toggleComposer"
+          >
+            {{ composerOpen ? '收起发布' : '发布动态' }}
+          </button>
           <button class="refresh-button" :disabled="loading" @click="loadPosts">
             {{ loading ? '刷新中...' : '刷新广场' }}
           </button>
@@ -45,6 +52,32 @@
       </div>
     </header>
 
+    <Transition name="composer-drop">
+      <div v-if="composerOpen" v-develop="80">
+        <RecordComposer
+          :session-id="sid"
+          variant="plaza"
+          default-visibility="public"
+          title="发布一条校园动态"
+          eyebrow="STUDENT MOMENT"
+          title-placeholder="标题，例如：晚自习后的操场"
+          content-placeholder="写下学习、生活或情绪里的一个片段..."
+          location-placeholder="地点，例如：图书馆 / 宿舍"
+          tags-placeholder="校园标签，用逗号分隔，例如：备考压力,宿舍生活,自我鼓励"
+          attachment-placeholder="添加图片 / 成长记忆"
+          empty-content="分享了一张校园成长记忆"
+          private-hint="私密动态只保存到个人资料里的成长记录。"
+          public-hint="公开动态会进入聊天广场。"
+          private-submit-label="保存私密记录"
+          public-submit-label="发布到广场"
+          saving-label="发布中..."
+          moderate-public
+          @created="handlePostCreated"
+        />
+        <p v-if="composerNotice" class="composer-notice">{{ composerNotice }}</p>
+      </div>
+    </Transition>
+
     <main class="plaza-layout">
       <section class="plaza-feed">
         <div v-if="visiblePosts.length === 0 && !loading" class="empty-plaza">
@@ -52,8 +85,11 @@
           <p>
             {{ showMyInteractionsOnly
               ? '还没有找到你互动过的公开胶片。'
-              : '还没有公开记录。去胶卷库发布第一条广场胶片吧。' }}
+              : '还没有公开动态。可以在这里发布第一条校园动态。' }}
           </p>
+          <button v-if="!showMyInteractionsOnly" class="empty-compose-button" type="button" @click="openComposer">
+            发布动态
+          </button>
         </div>
 
         <article v-for="post in visiblePosts" :key="post.id" v-develop="90" class="plaza-post">
@@ -256,7 +292,7 @@
         </section>
         <section v-develop="160" class="side-rule">
           <h2>广场规则</h2>
-          <p>只有在胶卷库选择“发布到广场”的记录会出现在这里。私密记录仍然只保存在自己的胶卷库。</p>
+          <p>发布时选择公开会进入广场；选择私密会沉淀到个人资料的成长记录。图片内容作为成长记忆保存。</p>
         </section>
         <section v-develop="200" class="moderation-card">
           <h2>温和社区机制</h2>
@@ -323,6 +359,8 @@ import {
   type PlazaCommentReplyItem,
   type PlazaPostItem,
 } from '../api/plaza'
+import RecordComposer from '../components/RecordComposer.vue'
+import type { LifeRecordItem } from '../api/life'
 import { resolveAssetUrl } from '../api/client'
 import { createClientId } from '../utils/id'
 
@@ -339,6 +377,8 @@ const activeReplyTarget = ref<{
   targetName: string
 } | null>(null)
 const loading = ref(false)
+const composerOpen = ref(false)
+const composerNotice = ref('')
 const anonymousMode = ref(localStorage.getItem('u-life-plaza-anonymous-v1') === 'true')
 const moderationWarnings = reactive<Record<number, string>>({})
 const reactionKey = ref('')
@@ -477,12 +517,22 @@ const saveAnonymousMode = () => {
   window.dispatchEvent(new CustomEvent('u-life-settings-changed'))
 }
 
-const moderateContent = (content: string) => {
-  const riskyWords = ['傻逼', '垃圾', '去死', '人肉', '手机号', '身份证', '住址']
-  const matched = riskyWords.find(word => content.includes(word))
-  if (!matched) return ''
-  if (['手机号', '身份证', '住址'].includes(matched)) return '这条内容可能包含隐私信息，请确认后再公开发送。'
-  return '这条内容可能不符合温和社区规则，请换一种更尊重的表达。'
+const toggleComposer = () => {
+  composerOpen.value = !composerOpen.value
+  composerNotice.value = ''
+}
+
+const openComposer = () => {
+  composerOpen.value = true
+  composerNotice.value = ''
+}
+
+const handlePostCreated = async (record: LifeRecordItem) => {
+  composerOpen.value = true
+  composerNotice.value = record.visibility === 'public'
+    ? '已发布到聊天广场。'
+    : '已保存为私密成长记录，可在个人资料中查看。'
+  if (record.visibility === 'public') await loadPosts()
 }
 
 const authorAvatarUrl = (url: string) => {
@@ -709,6 +759,14 @@ const suggestReply = (post: PlazaPostItem) => {
   replyDraft.value = pickSuggestion(post, activeReplyTarget.value?.targetName)
 }
 
+const moderateContent = (content: string) => {
+  const riskyWords = ['傻逼', '垃圾', '去死', '人肉', '手机号', '身份证', '住址']
+  const matched = riskyWords.find(word => content.includes(word))
+  if (!matched) return ''
+  if (['手机号', '身份证', '住址'].includes(matched)) return '这条内容可能包含隐私信息，请确认后再公开发送。'
+  return '这条内容可能不符合温和社区规则，请换一种更尊重的表达。'
+}
+
 const submitComment = async (post: PlazaPostItem) => {
   const content = (commentDrafts[post.id] || '').trim()
   if (!content) return
@@ -849,7 +907,10 @@ const moodText = (mood: string) => {
 
 .refresh-button,
 .filter-button,
-.silent-notice-button {
+.silent-notice-button,
+.compose-toggle-button,
+.empty-compose-button,
+.publish-button {
   align-self: center;
   min-height: 42px;
   border-radius: 12px;
@@ -861,14 +922,17 @@ const moodText = (mood: string) => {
 }
 
 .filter-button,
-.silent-notice-button {
+.silent-notice-button,
+.compose-toggle-button,
+.empty-compose-button {
   color: var(--journal-ink);
   border: 1px solid rgb(62 50 40 / 16%);
   background: rgb(253 251 247 / 72%);
 }
 
 .filter-button.active,
-.silent-notice-button.active {
+.silent-notice-button.active,
+.compose-toggle-button.active {
   color: #fff8e8;
   background: var(--journal-stamp);
   box-shadow: 0 10px 22px rgb(200 90 84 / 18%);
@@ -1062,9 +1126,42 @@ const moodText = (mood: string) => {
 }
 
 .filter-button:disabled,
-.silent-notice-button:disabled {
+.silent-notice-button:disabled,
+.publish-button:disabled {
   opacity: 0.55;
   cursor: default;
+}
+
+.composer-drop-enter-active,
+.composer-drop-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.composer-drop-enter-from,
+.composer-drop-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.composer-notice {
+  margin: 12px 0 0;
+  color: var(--journal-stamp);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ghost-button {
+  min-height: 40px;
+  border-radius: 10px;
+  padding: 0 14px;
+  color: var(--journal-ink);
+  border: 1px solid rgb(62 50 40 / 16%);
+  background: rgb(253 251 247 / 70%);
+  cursor: pointer;
+}
+
+.empty-compose-button {
+  margin-top: 16px;
 }
 
 .plaza-layout {

@@ -60,63 +60,19 @@
     </header>
 
     <main class="life-layout">
-      <section v-develop="80" class="record-form-card">
-        <span class="washi-tape"></span>
-        <div class="xiaoxi-lab-sticker" aria-hidden="true">
-          <img :src="currentXiaoxiAvatar.src" alt="" />
-          <span>PHOTO LAB</span>
-        </div>
-        <h2>新增记录</h2>
-
-        <div class="form-stack">
-          <input v-model="title" class="input" placeholder="标题，例如：晚上的校园散步" />
-          <textarea v-model="content" class="input min-h-32 resize-y" placeholder="写下今天发生了什么..." />
-          <input v-model="location" class="input" placeholder="地点，例如：图书馆 / 操场" />
-          <input v-model="tags" class="input" placeholder="标签，用逗号分隔，例如：学习,朋友,运动" />
-          <select v-model="moodLabel" class="input">
-            <option value="">关联情绪（可选）</option>
-            <option value="happy">开心</option>
-            <option value="neutral">平静</option>
-            <option value="anxious">焦虑</option>
-            <option value="sad">难过</option>
-            <option value="angry">生气</option>
-            <option value="surprised">惊讶</option>
-          </select>
-          <div class="visibility-switch" aria-label="记录可见性">
-            <button
-              :class="{ active: visibility === 'private' }"
-              type="button"
-              @click="visibility = 'private'"
-            >
-              仅自己可见
-            </button>
-            <button
-              :class="{ active: visibility === 'public' }"
-              type="button"
-              @click="visibility = 'public'"
-            >
-              发布到广场
-            </button>
-          </div>
-          <label class="file-picker">
-            <span>{{ image ? image.name : '选择一张照片 / Image' }}</span>
-            <input type="file" accept="image/*" @change="onFileChange" />
-          </label>
-          <Transition name="developing-wash">
-            <div v-if="developing" class="upload-developing" aria-live="polite">
-              <span class="developing-window"></span>
-              <div>
-                <strong>PHOTO LAB</strong>
-                <small>正在冲洗显影这一张照片</small>
-              </div>
-            </div>
-          </Transition>
-
-          <button class="save-button" :disabled="saving || !canSave" @click="save">
-            {{ saving ? '保存中...' : '保存记录' }}
-          </button>
-        </div>
-      </section>
+      <RecordComposer
+        v-develop="80"
+        :session-id="sid"
+        variant="life"
+        default-visibility="private"
+        title="新增记录"
+        :avatar-src="currentXiaoxiAvatar.src"
+        private-hint="私密记录只保存在成长记忆里。"
+        public-hint="公开记录会进入聊天广场，也会保留在成长记忆里。"
+        private-submit-label="保存记录"
+        public-submit-label="发布到广场"
+        @created="handleRecordCreated"
+      />
 
       <section class="records-board">
         <div class="drying-line" aria-hidden="true">
@@ -192,7 +148,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, type ComponentPublicInstance } from 'vue'
 
-import { createLifeRecord, deleteLifeRecord, getLifeRecords, type LifeRecordItem } from '../api/life'
+import RecordComposer from '../components/RecordComposer.vue'
+import { deleteLifeRecord, getLifeRecords, type LifeRecordItem } from '../api/life'
 import { resolveAssetUrl } from '../api/client'
 import { createClientId } from '../utils/id'
 
@@ -210,22 +167,11 @@ type XiaoxiAvatarKey = keyof typeof xiaoxiAvatars
 
 const sid = ref(localStorage.getItem('sid') || createClientId())
 const records = ref<LifeRecordItem[]>([])
-const title = ref('')
-const content = ref('')
-const location = ref('')
-const tags = ref('')
-const moodLabel = ref('')
-const visibility = ref<'private' | 'public'>('private')
-const image = ref<File | null>(null)
-const saving = ref(false)
-const developing = ref(false)
 const storedAvatarKey = localStorage.getItem('u-life-xiaoxi-avatar-key-v1')
 const currentAvatarKey = ref<XiaoxiAvatarKey>(isXiaoxiAvatarKey(storedAvatarKey) ? storedAvatarKey : 'usual')
 const highlightedRecordId = ref<number | null>(null)
 const recordElements = new Map<number, Element>()
-let developingTimer: number | undefined
 let highlightTimer: number | undefined
-const canSave = computed(() => Boolean(content.value.trim() || image.value))
 const currentXiaoxiAvatar = computed(() => xiaoxiAvatars[currentAvatarKey.value])
 const latestRecord = computed(() => records.value[0] || null)
 const latestRecordTitle = computed(() => latestRecord.value?.title || latestRecord.value?.content || '还没有胶片')
@@ -288,7 +234,6 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (developingTimer) window.clearTimeout(developingTimer)
   if (highlightTimer) window.clearTimeout(highlightTimer)
   window.removeEventListener('u-life-xiaoxi-avatar-changed', syncCurrentAvatar)
 })
@@ -307,49 +252,8 @@ const load = async () => {
   records.value = data
 }
 
-const onFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  image.value = input.files?.[0] || null
-  if (image.value) showDeveloping()
-}
-
-const save = async () => {
-  const cleanContent = content.value.trim()
-  if (!cleanContent && !image.value) return
-
-  saving.value = true
-  if (image.value) showDeveloping()
-  try {
-    const form = new FormData()
-    form.append('session_id', sid.value)
-    form.append('content', cleanContent || '分享了一张生活胶片')
-    if (title.value.trim()) form.append('title', title.value.trim())
-    if (location.value.trim()) form.append('location', location.value.trim())
-    if (tags.value.trim()) form.append('tags', tags.value.trim())
-    if (moodLabel.value) form.append('mood_label', moodLabel.value)
-    form.append('visibility', visibility.value)
-    if (image.value) form.append('image', image.value)
-
-    const { data } = await createLifeRecord(form)
-    records.value = [data, ...records.value]
-    title.value = ''
-    content.value = ''
-    location.value = ''
-    tags.value = ''
-    moodLabel.value = ''
-    visibility.value = 'private'
-    image.value = null
-  } finally {
-    saving.value = false
-  }
-}
-
-const showDeveloping = () => {
-  developing.value = true
-  if (developingTimer) window.clearTimeout(developingTimer)
-  developingTimer = window.setTimeout(() => {
-    developing.value = false
-  }, 1400)
+const handleRecordCreated = (record: LifeRecordItem) => {
+  records.value = [record, ...records.value]
 }
 
 const recordNumber = (index: number) => `ROLL ${String(records.value.length - index).padStart(3, '0')}`
@@ -783,50 +687,6 @@ const moodText = (mood: string) => {
   padding-top: 26px;
 }
 
-.record-form-card {
-  position: sticky;
-  top: 24px;
-  height: fit-content;
-  padding: 24px;
-  border: 1px solid rgb(62 50 40 / 18%);
-  background: #fff8e8;
-  box-shadow: 0 18px 42px rgb(62 50 40 / 16%);
-  clip-path: polygon(0 2%, 98% 0, 100% 97%, 2% 100%);
-}
-
-.xiaoxi-lab-sticker {
-  position: absolute;
-  right: 16px;
-  top: -18px;
-  z-index: 2;
-  display: grid;
-  justify-items: center;
-  width: 76px;
-  padding: 6px 6px 7px;
-  border: 1px solid rgb(62 50 40 / 14%);
-  border-radius: 12px;
-  background: rgb(253 251 247 / 92%);
-  box-shadow: 0 10px 18px rgb(62 50 40 / 12%);
-  rotate: 4deg;
-  pointer-events: none;
-}
-
-.xiaoxi-lab-sticker img {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-  filter: drop-shadow(0 5px 8px rgb(62 50 40 / 13%));
-  animation: labStickerFloat 3.4s ease-in-out infinite;
-}
-
-.xiaoxi-lab-sticker span {
-  margin-top: -3px;
-  color: var(--journal-stamp);
-  font-size: 9px;
-  font-weight: 900;
-}
-
-.washi-tape,
 .card-tape {
   position: absolute;
   top: -12px;
@@ -836,150 +696,6 @@ const moodText = (mood: string) => {
   rotate: -4deg;
   background: rgb(232 195 108 / 58%);
   border: 1px solid rgb(62 50 40 / 10%);
-}
-
-.record-form-card h2 {
-  margin: 0 0 16px;
-  color: var(--journal-ink);
-  font-size: 22px;
-}
-
-.form-stack {
-  display: grid;
-  gap: 12px;
-}
-
-.input {
-  width: 100%;
-  border: 1px solid rgb(62 50 40 / 18%);
-  border-radius: 10px;
-  padding: 0.72rem 0.8rem;
-  outline: none;
-  color: var(--journal-ink);
-  background: rgb(253 251 247 / 76%);
-}
-
-.input:focus {
-  border-color: rgb(200 90 84 / 48%);
-  box-shadow: 0 0 0 3px rgb(200 90 84 / 12%);
-}
-
-.file-picker {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px dashed rgb(62 50 40 / 34%);
-  border-radius: 10px;
-  color: var(--journal-muted);
-  background: rgb(253 251 247 / 58%);
-  cursor: pointer;
-}
-
-.visibility-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 5px;
-  border: 1px solid rgb(62 50 40 / 14%);
-  border-radius: 12px;
-  background: rgb(253 251 247 / 58%);
-}
-
-.visibility-switch button {
-  min-height: 36px;
-  border-radius: 9px;
-  color: var(--journal-muted);
-  background: transparent;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.visibility-switch button.active {
-  color: #fff8e8;
-  background: linear-gradient(145deg, #4b3525, #1a120d);
-  box-shadow: 0 8px 16px rgb(62 50 40 / 14%);
-}
-
-.file-picker input {
-  display: none;
-}
-
-.upload-developing {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  padding: 10px;
-  border: 1px dashed rgb(62 50 40 / 20%);
-  border-radius: 12px;
-  background: rgb(253 251 247 / 68%);
-  overflow: hidden;
-}
-
-.developing-window {
-  position: relative;
-  height: 46px;
-  border-radius: 8px;
-  border: 1px solid rgb(62 50 40 / 16%);
-  background:
-    linear-gradient(90deg, transparent 0 10%, rgb(62 50 40 / 22%) 10% 14%, transparent 14% 28%, rgb(62 50 40 / 20%) 28% 32%, transparent 32% 100%),
-    linear-gradient(135deg, #30251d, #e8c36c 54%, #fff8e8);
-  box-shadow: inset 0 0 0 5px rgb(32 21 15 / 82%);
-}
-
-.developing-window::after {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  background: linear-gradient(90deg, transparent, rgb(255 248 232 / 76%), transparent);
-  transform: translateX(-120%);
-  animation: developingSweep 1.15s ease-in-out infinite;
-}
-
-.upload-developing strong,
-.upload-developing small {
-  display: block;
-}
-
-.upload-developing strong {
-  color: var(--journal-stamp);
-  font-size: 12px;
-}
-
-.upload-developing small {
-  margin-top: 4px;
-  color: var(--journal-muted);
-  font-size: 12px;
-}
-
-.developing-wash-enter-active,
-.developing-wash-leave-active {
-  transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
-}
-
-.developing-wash-enter-from,
-.developing-wash-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-  filter: blur(5px);
-}
-
-.save-button {
-  width: 100%;
-  min-height: 46px;
-  border-radius: 12px;
-  color: #fff8e8;
-  font-weight: 700;
-  cursor: pointer;
-  background: linear-gradient(145deg, #4b3525, #1a120d);
-  box-shadow: 0 10px 20px rgb(62 50 40 / 18%);
-}
-
-.save-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .records-board {
@@ -1321,25 +1037,9 @@ const moodText = (mood: string) => {
   font-size: 12px;
 }
 
-@keyframes developingSweep {
-  to {
-    transform: translateX(120%);
-  }
-}
-
 @keyframes developGrow {
   from {
     width: 18%;
-  }
-}
-
-@keyframes labStickerFloat {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-1deg);
-  }
-  50% {
-    transform: translateY(-3px) rotate(2deg);
   }
 }
 
@@ -1405,12 +1105,6 @@ const moodText = (mood: string) => {
 
   .life-layout {
     display: block;
-  }
-
-  .record-form-card {
-    position: relative;
-    top: auto;
-    margin-bottom: 24px;
   }
 
   .film-desk {

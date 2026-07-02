@@ -2,9 +2,9 @@
   <div class="mood-journal">
     <header v-develop class="mood-header">
       <div>
-        <span class="kodak-chip">Exposure Log</span>
-        <h1 class="script-title">拍摄记录</h1>
-        <p>查看曝光曲线，重温拍摄那一刻的 Sunny 26°C。</p>
+        <span class="kodak-chip">Mood Calendar</span>
+        <h1 class="script-title">心情日历</h1>
+        <p>查看每月情绪轨迹，复盘学习压力、校园生活和成长变化。</p>
       </div>
       <div class="meter-dial">
         <span class="meter-needle" aria-hidden="true"></span>
