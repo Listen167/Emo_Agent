@@ -3,7 +3,7 @@ import * as Phaser from 'phaser'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { GameTownScene, type TownEnterEvent, type TownInteractEvent } from '../game/town/GameTownScene'
-import { townBuildings, type TownViewKey } from '../game/town/buildings'
+import type { TownViewKey } from '../game/town/buildings'
 import {
   CROP_DEFINITION_LIST,
   getCropDefinition,
@@ -63,12 +63,6 @@ const selectedFarmStatus = computed(() => {
   if (selectedFarmMature.value) return `${selectedFarmCrop.value.label}已经成熟，可以收获。`
   return `${selectedFarmCrop.value.label}正在成长：第 ${selectedFarmStage.value} / ${selectedFarmStageTotal.value} 阶段。`
 })
-
-const taskItems = computed(() => [
-  '拜访小曦的家，完成一次情绪记录',
-  '去胶片仓库保存一张生活照片',
-  '到简历工坊检查一段项目经历',
-])
 
 const handleEnterView = (event: TownEnterEvent) => {
   emit('enter-view', event.building.view)
@@ -198,19 +192,6 @@ onBeforeUnmount(() => {
 
       <aside class="town-side-panel">
         <section class="town-card">
-          <span class="town-card-label">Buildings</span>
-          <button
-            v-for="building in townBuildings"
-            :key="building.id"
-            class="building-shortcut"
-            type="button"
-            @click="emit('enter-view', building.view)"
-          >
-            <span>{{ building.name }}</span>
-          </button>
-        </section>
-
-        <section class="town-card">
           <span class="town-card-label">Bag</span>
           <div
             v-for="item in inventoryRows"
@@ -220,13 +201,6 @@ onBeforeUnmount(() => {
             <span>{{ item.label }}</span>
             <strong>{{ item.count }}</strong>
           </div>
-        </section>
-
-        <section class="town-card">
-          <span class="town-card-label">Today</span>
-          <ul class="task-list">
-            <li v-for="task in taskItems" :key="task">{{ task }}</li>
-          </ul>
         </section>
       </aside>
     </section>
@@ -407,30 +381,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 16px 34px rgb(62 50 40 / 12%);
 }
 
-.building-shortcut {
-  display: grid;
-  gap: 3px;
-  min-height: 54px;
-  padding: 10px 12px;
-  border: 1px solid rgb(62 50 40 / 14%);
-  border-radius: 12px;
-  color: var(--journal-ink);
-  text-align: left;
-  background: rgb(253 251 247 / 72%);
-  cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
-}
-
-.building-shortcut:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgb(62 50 40 / 12%);
-}
-
-.building-shortcut span {
-  font-size: 13px;
-  font-weight: 900;
-}
-
 .inventory-row {
   min-height: 42px;
   display: flex;
@@ -451,16 +401,6 @@ onBeforeUnmount(() => {
   min-width: 28px;
   text-align: right;
   font-size: 18px;
-}
-
-.task-list {
-  display: grid;
-  gap: 9px;
-  margin: 0;
-  padding-left: 18px;
-  color: var(--journal-muted);
-  font-size: 13px;
-  line-height: 1.55;
 }
 
 .farm-modal-backdrop {
